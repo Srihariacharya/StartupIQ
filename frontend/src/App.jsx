@@ -4,7 +4,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Analyzer from './pages/Analyzer';
 import MarketHeatmap from './pages/MarketHeatmap';
-// import IdeaGenerator from './pages/IdeaGenerator'; // (Create this next)
+import IdeaGenerator from './pages/IdeaGenerator'; // (Create this next)
 
 function App() {
   return (
@@ -15,7 +15,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/analyzer" element={<Analyzer />} />
           <Route path="/heatmap" element={<MarketHeatmap />} />
-          {/* <Route path="/ideas" element={<IdeaGenerator />} /> */}
+          <Route path="/ideas" element={<IdeaGenerator />} /> 
         </Routes>
       </div>
     </Router>

@@ -1,15 +1,19 @@
 from flask import Flask
 from flask_cors import CORS
 from api.analyzer_routes import analyzer_bp
+from api.generator_routes import generator_bp  
 from database.connection import get_db
 
 app = Flask(__name__)
 
+# Allow CORS for all domains on all routes
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 get_db()
 
+# Register Blueprints
 app.register_blueprint(analyzer_bp, url_prefix='/api')
+app.register_blueprint(generator_bp, url_prefix='/api') 
 
 @app.route('/')
 def home():
