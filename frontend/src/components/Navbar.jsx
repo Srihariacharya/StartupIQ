@@ -22,6 +22,7 @@ const Navbar = () => {
               <NavLink to="/heatmap">Market Heatmap</NavLink>
               <NavLink to="/ideas">Idea Generator</NavLink>
               <NavLink to="/analyzer">Analyzer</NavLink>
+              <NavLink to="/talent">Talent Match</NavLink>
             </div>
           </div>
 

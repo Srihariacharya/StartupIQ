@@ -40,7 +40,7 @@ def generate_idea():
         """
 
         # Use the newer, faster Flash model
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-flash-latest')
         response = model.generate_content(prompt)
         
         # 2. Debug: Check what AI actually sent back

@@ -4,7 +4,8 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Analyzer from './pages/Analyzer';
 import MarketHeatmap from './pages/MarketHeatmap';
-import IdeaGenerator from './pages/IdeaGenerator'; // (Create this next)
+import IdeaGenerator from './pages/IdeaGenerator'; 
+import TalentMatchmaker from './pages/TalentMatchmaker';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/analyzer" element={<Analyzer />} />
           <Route path="/heatmap" element={<MarketHeatmap />} />
           <Route path="/ideas" element={<IdeaGenerator />} /> 
+          <Route path="/talent" element={<TalentMatchmaker />} />
         </Routes>
       </div>
     </Router>
