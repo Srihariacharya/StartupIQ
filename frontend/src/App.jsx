@@ -1,23 +1,36 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// Import Pages
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Analyzer from './pages/Analyzer';
-import MarketHeatmap from './pages/MarketHeatmap';
-import IdeaGenerator from './pages/IdeaGenerator'; 
+import IdeaAnalyzer from './pages/IdeaAnalyzer';
+import IdeaGenerator from './pages/IdeaGenerator';
 import TalentMatchmaker from './pages/TalentMatchmaker';
+import MarketHeatmap from './pages/MarketHeatmap'; 
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-gray-900 min-h-screen">
+        {/* The Navbar stays visible on all pages */}
         <Navbar />
+        
         <Routes>
+          {/* Main Landing Page */}
           <Route path="/" element={<Home />} />
-          <Route path="/analyzer" element={<Analyzer />} />
-          <Route path="/heatmap" element={<MarketHeatmap />} />
-          <Route path="/ideas" element={<IdeaGenerator />} /> 
+
+          {/* Phase 2: Feasibility Analyzer */}
+          <Route path="/analyze" element={<IdeaAnalyzer />} />
+
+          {/* Phase 3: AI Idea Generator */}
+          <Route path="/generate" element={<IdeaGenerator />} />
+
+          {/* Phase 3 (Updated): GitHub Talent Scout */}
           <Route path="/talent" element={<TalentMatchmaker />} />
+
+          {/* Phase 4: Market Trends & Heatmap */}
+          <Route path="/market" element={<MarketHeatmap />} />
         </Routes>
       </div>
     </Router>

@@ -4,6 +4,7 @@ from api.analyzer_routes import analyzer_bp
 from api.generator_routes import generator_bp  
 from database.connection import get_db
 from api.talent_routes import talent_bp
+from api.market_routes import market_bp
 
 app = Flask(__name__)
 
@@ -16,6 +17,7 @@ get_db()
 app.register_blueprint(analyzer_bp, url_prefix='/api')
 app.register_blueprint(generator_bp, url_prefix='/api') 
 app.register_blueprint(talent_bp, url_prefix='/api')
+app.register_blueprint(market_bp, url_prefix='/api')
 
 @app.route('/')
 def home():
