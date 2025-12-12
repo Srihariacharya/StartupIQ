@@ -8,6 +8,7 @@ import IdeaAnalyzer from './pages/IdeaAnalyzer';
 import IdeaGenerator from './pages/IdeaGenerator';
 import TalentMatchmaker from './pages/TalentMatchmaker';
 import MarketHeatmap from './pages/MarketHeatmap'; 
+import BrandNameGenerator from './pages/BrandNameGenerator';
 
 function App() {
   return (
@@ -31,6 +32,9 @@ function App() {
 
           {/* Phase 4: Market Trends & Heatmap */}
           <Route path="/market" element={<MarketHeatmap />} />
+
+          {/* 6. Brand Name Generator (The Fix) */}
+          <Route path="/brand" element={<BrandNameGenerator />} />
         </Routes>
       </div>
     </Router>
