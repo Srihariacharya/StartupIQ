@@ -19,34 +19,37 @@ def analyze_market():
         if not industry:
             return jsonify({"error": "Industry is required"}), 400
 
-        # Prompt Gemini to generate JSON data for charts
+        # --- UPDATED PROMPT FOR REAL DATA ---
         prompt = f"""
-        Act as a Market Research Analyst.
-        Generate realistic market trend data for the "{industry}" industry for the last 5 years (2020-2024) and forecast for 2025.
+        Act as a Senior Market Research Analyst.
+        Analyze the current real-world market for the "{industry}" industry (focus on India and Global trends).
         
-        Return STRICT JSON format with no markdown. The JSON must have these exact keys:
+        Return STRICT JSON format with these exact keys:
         
-        1. "growth_trend": A list of 6 objects, each with "year" (string) and "market_size" (number in Billions).
-        2. "sentiment_distribution": A list of objects for a Pie Chart: "Positive", "Neutral", "Negative" with values summing to 100.
-        3. "top_competitors": A list of 5 objects with "name" and "market_share" (number).
-        4. "summary": A 1-sentence summary of the market status.
+        1. "summary": A 1-sentence executive summary of the current market status.
+        2. "growth_trend": A list of 6 objects representing market size history & forecast (2020-2025). Format: {{"year": "202x", "market_size": number_in_billions}}.
+        3. "sentiment_distribution": A list of 3 objects for sentiment (Positive, Neutral, Negative). Total must match 100.
+        
+        4. "trending_startups_heatmap": 
+           Identify 10 REAL, ACTUAL startups or key players currently active in the "{industry}" sector.
+           Do NOT make up names. Use real companies (e.g., if EdTech: Byju's, Unacademy, PhysicsWallah, etc.).
+           For each company, estimate:
+           - "name": Real Company Name.
+           - "size": Estimated Valuation or Funding Score (10-100).
+           - "growth": Estimated YoY Growth % (-20 to +120).
+           
+        5. "top_competitors": List of 5 top competitors with estimated market share %.
 
-        Example Format:
+        Example JSON Structure:
         {{
-            "growth_trend": [
-                {{"year": "2020", "market_size": 50}}, 
-                {{"year": "2021", "market_size": 65}}
+            "summary": "The EV market is booming with 40% YoY growth...",
+            "growth_trend": [{{"year": "2020", "market_size": 20}}, ...],
+            "sentiment_distribution": [{{"name": "Positive", "value": 70}}, ...],
+            "trending_startups_heatmap": [
+                {{"name": "RealCompany A", "size": 90, "growth": 45}},
+                {{"name": "RealCompany B", "size": 60, "growth": 20}}
             ],
-            "sentiment_distribution": [
-                {{"name": "Positive", "value": 60}},
-                {{"name": "Neutral", "value": 30}},
-                {{"name": "Negative", "value": 10}}
-            ],
-            "top_competitors": [
-                {{"name": "Company A", "market_share": 30}},
-                {{"name": "Company B", "market_share": 20}}
-            ],
-            "summary": "The market is growing rapidly due to AI adoption."
+            "top_competitors": [...]
         }}
         """
 
