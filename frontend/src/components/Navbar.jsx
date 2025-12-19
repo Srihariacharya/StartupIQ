@@ -30,13 +30,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Login/Signup Buttons (Visual Only) */}
-          <div className="hidden md:flex items-center gap-4">
-            <button className="text-gray-300 hover:text-white font-medium transition-colors text-sm">Log In</button>
-            <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 text-sm">
-              Sign Up
-            </button>
-          </div>
+          {/* Login/Signup Buttons REMOVED */}
 
         </div>
       </div>
