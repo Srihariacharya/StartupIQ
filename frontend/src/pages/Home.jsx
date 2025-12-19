@@ -63,7 +63,7 @@ const Home = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <h2 className="text-3xl font-bold text-center mb-12">Everything You Need to Launch 🚀</h2>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
           
           {/* 1. Feasibility Analyzer */}
           <FeatureCard 
@@ -99,6 +99,24 @@ const Home = () => {
             icon="📈" 
             link="/market"
             color="purple"
+          />
+
+          {/* 5. Brand Names (NEW) */}
+          <FeatureCard 
+            title="Brand Names" 
+            desc="Generate catchy, available, and brandable names for your startup using AI."
+            icon="🏷️" 
+            link="/brand"
+            color="pink"
+          />
+
+          {/* 6. Pitch Deck (NEW) */}
+          <FeatureCard 
+            title="Pitch Deck" 
+            desc="Create investor-ready slide decks and storyboards in minutes."
+            icon="📽️" 
+            link="/pitch"
+            color="indigo"
           />
 
         </div>

@@ -93,6 +93,7 @@ const IdeaAnalyzer = () => {
                         <option value="Edtech">Edtech</option>
                         <option value="Healthcare">Healthcare</option>
                         <option value="E-commerce">E-commerce</option>
+                        <option value="Other">Other</option>
                     </select>
                     </div>
                 </div>
