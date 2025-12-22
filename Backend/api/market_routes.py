@@ -19,43 +19,39 @@ def analyze_market():
         if not industry:
             return jsonify({"error": "Industry is required"}), 400
 
-        # --- UPDATED PROMPT FOR REAL DATA ---
+        # --- UPDATED PROMPT FOR RICHER CARDS ---
         prompt = f"""
         Act as a Senior Market Research Analyst.
         Analyze the current real-world market for the "{industry}" industry (focus on India and Global trends).
         
         Return STRICT JSON format with these exact keys:
         
-        1. "summary": A 1-sentence executive summary of the current market status.
-        2. "growth_trend": A list of 6 objects representing market size history & forecast (2020-2025). Format: {{"year": "202x", "market_size": number_in_billions}}.
-        3. "sentiment_distribution": A list of 3 objects for sentiment (Positive, Neutral, Negative). Total must match 100.
+        1. "summary": A 1-sentence executive summary.
+        2. "growth_trend": List of 6 objects (2020-2025) format: {{"year": "202x", "market_size": number_in_billions}}.
+        3. "sentiment_distribution": List of 3 objects (Positive, Neutral, Negative) summing to 100.
         
         4. "trending_startups_heatmap": 
-           Identify 10 REAL, ACTUAL startups or key players currently active in the "{industry}" sector.
-           Do NOT make up names. Use real companies (e.g., if EdTech: Byju's, Unacademy, PhysicsWallah, etc.).
-           For each company, estimate:
-           - "name": Real Company Name.
-           - "size": Estimated Valuation or Funding Score (10-100).
-           - "growth": Estimated YoY Growth % (-20 to +120).
+           Identify 4 TRENDING startup concepts/opportunities in "{industry}".
+           For each, provide:
+           - "name": A catchy startup name or concept title.
+           - "subtitle": What problem it solves (max 6 words).
+           - "competition": "High", "Medium", or "Low".
+           - "avgFunding": Estimated funding needed (e.g., "₹5Cr", "$1M").
+           - "successRate": A number between 50-95.
            
-        5. "top_competitors": List of 5 top competitors with estimated market share %.
-
         Example JSON Structure:
         {{
-            "summary": "The EV market is booming with 40% YoY growth...",
-            "growth_trend": [{{"year": "2020", "market_size": 20}}, ...],
-            "sentiment_distribution": [{{"name": "Positive", "value": 70}}, ...],
+            "summary": "...",
+            "growth_trend": [...],
+            "sentiment_distribution": [...],
             "trending_startups_heatmap": [
-                {{"name": "RealCompany A", "size": 90, "growth": 45}},
-                {{"name": "RealCompany B", "size": 60, "growth": 20}}
-            ],
-            "top_competitors": [...]
+                {{"name": "AgriDrone", "subtitle": "Drones for pesticide spraying", "competition": "Medium", "avgFunding": "₹2Cr", "successRate": 85}},
+                ... (4 items total)
+            ]
         }}
         """
 
         response = model.generate_content(prompt)
-        
-        # Clean AI Output
         clean_text = response.text.replace("```json", "").replace("```", "").strip()
         market_data = json.loads(clean_text)
 
