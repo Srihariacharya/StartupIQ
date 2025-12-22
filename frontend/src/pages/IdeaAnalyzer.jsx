@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom'; // 1. Import useLocation
 import { Sparkles, HelpCircle, AlertCircle } from 'lucide-react';
 
 const IdeaAnalyzer = () => {
+  const location = useLocation(); // 2. Get the location object
+  
+  // 3. Check if there is data passed from the previous page (Idea Generator)
+  const incomingData = location.state || {};
+
   const [formData, setFormData] = useState({
-    startupName: '',
-    industry: '',
-    description: '',
+    // Pre-fill if data exists, otherwise use empty defaults
+    startupName: incomingData.name || '', 
+    industry: incomingData.industry || '',
+    description: incomingData.solution || incomingData.description || '', 
     funding: 40,
     teamSize: 'Solo Founder',
     marketSize: 'Regional',
@@ -45,7 +52,6 @@ const IdeaAnalyzer = () => {
   };
 
   return (
-    // Updated to match project Dark Theme (bg-gray-900)
     <div className="min-h-screen bg-gray-900 py-12 px-4 font-sans text-white">
       
       {/* Header */}
@@ -61,7 +67,7 @@ const IdeaAnalyzer = () => {
 
       <div className="max-w-4xl mx-auto grid gap-8">
         
-        {/* INPUT FORM - Dark Card */}
+        {/* INPUT FORM */}
         <div className="bg-gray-800 rounded-2xl shadow-xl border border-gray-700 p-8">
             <h2 className="text-xl font-bold text-white mb-6 border-b border-gray-700 pb-4">
             Tell Us About Your Startup
@@ -75,6 +81,8 @@ const IdeaAnalyzer = () => {
                     <input 
                       type="text" 
                       name="startupName" 
+                      // If data was auto-filled, this will show it
+                      value={formData.startupName} 
                       placeholder="e.g., SecureVault" 
                       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" 
                       onChange={handleChange} 
@@ -84,6 +92,7 @@ const IdeaAnalyzer = () => {
                     <label className="block text-sm font-semibold text-gray-300 mb-2">Industry Sector *</label>
                     <select 
                       name="industry" 
+                      value={formData.industry}
                       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 outline-none" 
                       onChange={handleChange}
                     >
@@ -103,6 +112,7 @@ const IdeaAnalyzer = () => {
                     <label className="block text-sm font-semibold text-gray-300 mb-2">Solution Description</label>
                     <textarea 
                       name="description" 
+                      value={formData.description}
                       placeholder="Describe your solution..." 
                       rows="3" 
                       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 outline-none resize-none" 
@@ -132,6 +142,7 @@ const IdeaAnalyzer = () => {
                         <label className="block text-sm font-semibold text-gray-300 mb-2">Team Size</label>
                         <select 
                           name="teamSize" 
+                          value={formData.teamSize}
                           className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 outline-none" 
                           onChange={handleChange}
                         >
@@ -144,6 +155,7 @@ const IdeaAnalyzer = () => {
                         <label className="block text-sm font-semibold text-gray-300 mb-2">Target Market Size</label>
                         <select 
                           name="marketSize" 
+                          value={formData.marketSize}
                           className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 outline-none" 
                           onChange={handleChange}
                         >
@@ -167,7 +179,7 @@ const IdeaAnalyzer = () => {
             </div>
         </div>
 
-        {/* RESULTS SECTION - Adjusted for Dark Mode */}
+        {/* RESULTS SECTION */}
         {result && (
             <div className="bg-gray-800 text-white rounded-2xl shadow-2xl p-8 border border-emerald-500/30 animate-in fade-in slide-in-from-bottom-4">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8">

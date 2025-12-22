@@ -34,7 +34,7 @@ const Home = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center relative z-10">
           <div className="inline-block mb-4 px-4 py-1 rounded-full bg-blue-900/30 border border-blue-500/30 text-blue-300 text-sm font-semibold animate-bounce-slow">
-            🚀 AI-Powered Startup Intelligence
+            AI-Powered Startup Intelligence
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">

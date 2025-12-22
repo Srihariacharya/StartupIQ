@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import for navigation
 
 const IdeaGenerator = () => {
   const [keywords, setKeywords] = useState('');
   const [ideas, setIdeas] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Hook to move between pages
 
   const handleGenerate = async (e) => {
     e.preventDefault();
@@ -14,19 +16,32 @@ const IdeaGenerator = () => {
     setIdeas([]); // Clear old ideas
 
     try {
-      // Calls the backend to generate ideas
-      const res = await axios.post('http://127.0.0.1:5000/api/generate_ideas', { keywords });
+      // FIX 1: Correct URL ('/generate_idea') and Payload ('topic')
+      const res = await axios.post('http://127.0.0.1:5000/api/generate_idea', { 
+        topic: keywords 
+      });
       setIdeas(res.data);
     } catch (err) {
       console.error(err);
-      alert("Error generating ideas. Make sure backend is running.");
+      alert("Error generating ideas. Make sure backend is running on port 5000.");
     }
     setLoading(false);
   };
 
+  const handleAnalyze = (idea) => {
+    // FIX 2: Navigate to Analyzer and pass the idea data
+    navigate('/analyze', { 
+      state: { 
+        name: idea.name, 
+        solution: idea.solution,
+        industry: keywords // Optional: Pass the search term as industry
+      } 
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8 animate-fade-in">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400">
           💡 AI Startup Idea Generator
         </h1>
@@ -38,7 +53,7 @@ const IdeaGenerator = () => {
         <div className="flex gap-4 max-w-2xl mx-auto mb-10">
           <input 
             type="text" 
-            placeholder="Enter keywords (e.g. 'Blockchain for Farmers' or 'Student Dating App')" 
+            placeholder="Enter keywords (e.g. 'Blockchain for Farmers')" 
             className="flex-grow p-4 rounded bg-gray-800 border border-gray-600 text-white focus:border-orange-500 outline-none"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
@@ -56,12 +71,34 @@ const IdeaGenerator = () => {
         <div className="grid md:grid-cols-3 gap-6">
           {ideas.map((idea, index) => (
             <div key={index} className="bg-gray-800 p-6 rounded-lg border border-gray-700 hover:border-orange-500 transition-all shadow-xl flex flex-col">
-              <div className="text-4xl mb-4">{idea.icon || '🚀'}</div>
-              <h3 className="text-xl font-bold text-white mb-2">{idea.title}</h3>
-              <p className="text-gray-400 text-sm mb-4 flex-grow">{idea.description}</p>
+              <div className="text-4xl mb-4">🚀</div>
               
-              <div className="bg-gray-900 p-3 rounded text-xs text-gray-300 border border-gray-700">
-                <span className="font-bold text-orange-400">Target Audience:</span> {idea.target_audience}
+              {/* Data Display */}
+              <h3 className="text-xl font-bold text-white mb-2">{idea.name}</h3>
+              
+              <div className="flex-grow space-y-3 mb-6">
+                <div>
+                    <span className="text-xs font-bold text-red-400 uppercase tracking-wide">The Problem</span>
+                    <p className="text-gray-400 text-sm leading-snug">{idea.problem}</p>
+                </div>
+                <div>
+                    <span className="text-xs font-bold text-green-400 uppercase tracking-wide">The Solution</span>
+                    <p className="text-gray-300 text-sm leading-snug">{idea.solution}</p>
+                </div>
+              </div>
+              
+              <div className="mt-auto">
+                <div className="bg-gray-900 p-3 rounded text-xs text-gray-300 border border-gray-700 mb-4">
+                    <span className="font-bold text-orange-400">Audience:</span> {idea.audience}
+                </div>
+
+                {/* FIX 3: The Button to Analyze */}
+                <button 
+                  onClick={() => handleAnalyze(idea)}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-bold text-sm transition-colors shadow-lg shadow-blue-900/20"
+                >
+                  Analyze This Idea →
+                </button>
               </div>
             </div>
           ))}
