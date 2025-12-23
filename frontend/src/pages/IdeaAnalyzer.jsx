@@ -1,25 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom'; // 1. Import useLocation
-import { Sparkles, HelpCircle, AlertCircle } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { Sparkles, AlertCircle, Info } from 'lucide-react';
 
 const IdeaAnalyzer = () => {
-  const location = useLocation(); // 2. Get the location object
-  
-  // 3. Check if there is data passed from the previous page (Idea Generator)
+  const location = useLocation();
   const incomingData = location.state || {};
 
   const [formData, setFormData] = useState({
-    // Pre-fill if data exists, otherwise use empty defaults
     startupName: incomingData.name || '', 
     industry: incomingData.industry || '',
     description: incomingData.solution || incomingData.description || '', 
     funding: 40,
     teamSize: 'Solo Founder',
     marketSize: 'Regional',
-    businessModel: 'Subscription',
-    locationCritical: 'No - Fully online/remote',
-    competitors: ''
   });
 
   const [result, setResult] = useState(null);
@@ -41,11 +35,12 @@ const IdeaAnalyzer = () => {
     setResult(null);
 
     try {
+        // Points to the consolidated Flask API route
         const response = await axios.post('http://127.0.0.1:5000/api/analyze', formData);
         setResult(response.data);
     } catch (err) {
         console.error(err);
-        setError("Could not connect to the server. Ensure Backend is running on port 5000.");
+        setError("CORS or Connection Error. Ensure Backend is running on port 5000.");
     } finally {
         setLoading(false);
     }
@@ -57,11 +52,11 @@ const IdeaAnalyzer = () => {
       {/* Header */}
       <div className="max-w-4xl mx-auto mb-10 text-center md:text-left">
         <div className="inline-block bg-blue-900/50 text-blue-300 border border-blue-700/50 text-xs font-bold px-3 py-1 rounded-full mb-3">
-          🤖 Success Predictor
+           Gemini VC Analyst
         </div>
-        <h1 className="text-4xl font-bold text-white mb-4">AI Startup Success Analyzer</h1>
+        <h1 className="text-4xl font-bold text-white mb-4">Startup Success Predictor</h1>
         <p className="text-gray-400 text-lg max-w-2xl">
-          Get data-driven insights on your startup’s probability of success.
+          Let AI analyze your business model, funding, and market fit to predict your success odds.
         </p>
       </div>
 
@@ -74,17 +69,16 @@ const IdeaAnalyzer = () => {
             </h2>
 
             <div className="space-y-6">
-                {/* Row 1 */}
+                {/* Name and Industry */}
                 <div className="grid md:grid-cols-2 gap-6">
                     <div>
                     <label className="block text-sm font-semibold text-gray-300 mb-2">Startup Name *</label>
                     <input 
                       type="text" 
                       name="startupName" 
-                      // If data was auto-filled, this will show it
                       value={formData.startupName} 
                       placeholder="e.g., SecureVault" 
-                      className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" 
+                      className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 outline-none transition-all" 
                       onChange={handleChange} 
                     />
                     </div>
@@ -102,6 +96,8 @@ const IdeaAnalyzer = () => {
                         <option value="Edtech">Edtech</option>
                         <option value="Healthcare">Healthcare</option>
                         <option value="E-commerce">E-commerce</option>
+                        <option value="AgriTech">AgriTech</option>
+                        <option value="SAAS">SAAS</option>
                         <option value="Other">Other</option>
                     </select>
                     </div>
@@ -120,7 +116,7 @@ const IdeaAnalyzer = () => {
                     ></textarea>
                 </div>
 
-                {/* Funding Slider */}
+                {/* Funding */}
                 <div>
                     <div className="flex justify-between mb-2">
                         <label className="block text-sm font-semibold text-gray-300">Initial Funding</label>
@@ -128,8 +124,8 @@ const IdeaAnalyzer = () => {
                     </div>
                     <input 
                       type="range" 
-                      min="0" 
-                      max="100" 
+                      min="1" 
+                      max="1000" 
                       value={formData.funding} 
                       onChange={handleSliderChange} 
                       className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500" 
@@ -149,6 +145,7 @@ const IdeaAnalyzer = () => {
                             <option>Solo Founder</option>
                             <option>2-5 Employees</option>
                             <option>5-10 Employees</option>
+                            <option>10+ Employees</option>
                         </select>
                     </div>
                     <div>
@@ -166,7 +163,6 @@ const IdeaAnalyzer = () => {
                     </div>
                 </div>
 
-                {/* Button */}
                 <button 
                   onClick={handleSubmit} 
                   disabled={loading} 
@@ -184,35 +180,67 @@ const IdeaAnalyzer = () => {
             <div className="bg-gray-800 text-white rounded-2xl shadow-2xl p-8 border border-emerald-500/30 animate-in fade-in slide-in-from-bottom-4">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                     
-                    {/* Score Circle */}
+                    {/* Score Circle & Source Badge */}
                     <div className="text-center">
-                        <div className="w-32 h-32 rounded-full border-8 border-emerald-500 flex items-center justify-center text-4xl font-bold shadow-[0_0_20px_rgba(16,185,129,0.3)] bg-gray-900">
+                        <div className={`w-32 h-32 rounded-full border-8 flex items-center justify-center text-4xl font-bold shadow-[0_0_20px_rgba(0,0,0,0.3)] bg-gray-900 ${result.score > 70 ? 'border-emerald-500 text-emerald-400 shadow-emerald-900/40' : result.score > 40 ? 'border-yellow-500 text-yellow-400 shadow-yellow-900/40' : 'border-red-500 text-red-400 shadow-red-900/40'}`}>
                             {result.score}%
                         </div>
-                        <p className="mt-2 text-emerald-400 font-semibold tracking-wider uppercase text-sm">Success Probability</p>
+                        <p className="mt-2 text-gray-400 font-semibold tracking-wider uppercase text-sm mb-4">Probability</p>
+                        
+                        {/* THE NEW SOURCE BADGE */}
+                        <div className="flex flex-col items-center gap-1">
+                            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+                                Analysis Source
+                            </span>
+                            <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${
+                                result.source?.includes('Dataset') 
+                                ? 'bg-emerald-900/20 border-emerald-500/50 text-emerald-400' 
+                                : 'bg-blue-900/20 border-blue-500/50 text-blue-400'
+                            }`}>
+                                {result.source || "Hybrid AI Engine"}
+                            </span>
+                        </div>
                     </div>
 
                     {/* Text Analysis */}
-                    <div className="flex-1">
-                        <h3 className="text-2xl font-bold mb-2 text-white">Analysis Report</h3>
+                    <div className="flex-1 w-full">
+                        <h3 className="text-2xl font-bold mb-2 text-white">AI Verdict</h3>
                         <p className="text-gray-300 mb-6 text-lg leading-relaxed">{result.analysis}</p>
                         
-                        <div className="bg-gray-700/50 p-5 rounded-lg border-l-4 border-yellow-500">
-                            <h4 className="font-bold text-yellow-500 mb-3 flex items-center gap-2"><AlertCircle size={18}/> Recommendations</h4>
-                            <ul className="space-y-3">
-                                {result.recommendations.map((rec, idx) => (
-                                    <li key={idx} className="flex items-start gap-3 text-gray-300 text-sm">
-                                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0"></span> 
-                                        {rec}
+                        <div className="bg-gray-700/50 p-5 rounded-lg border-l-4 border-blue-500">
+                            <h4 className="font-bold text-blue-400 mb-3 flex items-center gap-2">
+                                <Info size={18}/> Strategic Advice
+                            </h4>
+                            <ul className="space-y-4">
+                                {result.recommendations && result.recommendations.map((rec, index) => (
+                                    <li key={index} className="text-sm">
+                                        {/* Object vs String Guard */}
+                                        {typeof rec === 'object' ? (
+                                            <>
+                                              <strong className="text-blue-300 block mb-1">
+                                                {rec.title || "Strategic Insight"}:
+                                              </strong>
+                                              <span className="text-gray-300">{rec.tip || rec.content}</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-gray-300 flex gap-2">
+                                                <span className="text-blue-500">•</span> {rec}
+                                            </span>
+                                        )}
                                     </li>
                                 ))}
                             </ul>
+                        </div>
+                        
+                        {/* Footer Details */}
+                        <div className="mt-6 pt-4 border-t border-gray-700 flex justify-between items-center text-[10px] text-gray-500 uppercase tracking-widest">
+                            <span>Method: Random Forest Classifier</span>
+                            <span>Model Status: Active</span>
                         </div>
                     </div>
                 </div>
             </div>
         )}
-
       </div>
     </div>
   );
