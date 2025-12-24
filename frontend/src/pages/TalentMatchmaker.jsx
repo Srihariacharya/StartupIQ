@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+// No extra icon imports needed based on your current code
 
 // --- CANDIDATE CARD COMPONENT ---
 const CandidateCard = ({ person, mySkills }) => {
@@ -7,7 +8,7 @@ const CandidateCard = ({ person, mySkills }) => {
   const [loading, setLoading] = useState(false);
 
   const checkFit = async () => {
-    if (!mySkills) return alert("Please enter YOUR skills first!");
+    if (!mySkills) return alert("Please enter YOUR skills first in the top box!");
     setLoading(true);
     try {
       const res = await axios.post('http://127.0.0.1:5000/api/analyze_fit', {
@@ -22,21 +23,22 @@ const CandidateCard = ({ person, mySkills }) => {
   };
 
   return (
-    <div className="bg-gray-800 p-5 rounded-lg border border-gray-700 hover:border-blue-500 transition-all shadow-lg flex flex-col justify-between">
+    <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 hover:border-blue-500 hover:shadow-blue-500/20 transition-all shadow-lg flex flex-col justify-between animate-in fade-in zoom-in duration-500">
       
       {/* Header: Avatar & Name */}
-      <div className="flex items-center gap-4 mb-3">
-        <img src={person.avatar} alt={person.name} className="w-16 h-16 rounded-full border-2 border-blue-500" />
-        <div>
-          <h3 className="text-xl font-bold text-white capitalize">{person.name}</h3>
-          <p className="text-blue-400 text-sm font-semibold truncate w-40">{person.bio}</p>
+      <div className="flex items-center gap-4 mb-4">
+        <img src={person.avatar} alt={person.name} className="w-16 h-16 rounded-full border-2 border-blue-500 object-cover" />
+        <div className="min-w-0">
+          <h3 className="text-lg font-bold text-white capitalize truncate">{person.name}</h3>
+          <p className="text-blue-400 text-xs font-semibold uppercase tracking-wider mb-1">{person.role}</p>
+          <p className="text-gray-400 text-xs truncate w-40">{person.bio}</p>
         </div>
       </div>
 
       {/* Skills Tags */}
       <div className="mb-4 flex flex-wrap gap-2">
         {person.skills.map((skill, i) => (
-          <span key={i} className="bg-gray-700 text-xs text-gray-300 px-2 py-1 rounded border border-gray-600">
+          <span key={i} className="bg-gray-700/50 text-xs text-blue-200 px-2 py-1 rounded border border-gray-600">
             {skill}
           </span>
         ))}
@@ -44,21 +46,19 @@ const CandidateCard = ({ person, mySkills }) => {
 
       {/* Actions */}
       <div className="mt-auto space-y-3">
-        {/* Real Profile Link */}
         <a href={person.linkedin} target="_blank" rel="noopener noreferrer"
-          className="block w-full text-center bg-gray-700 hover:bg-gray-600 py-2 rounded text-white text-sm font-bold border border-gray-600 transition-all">
-          🔗 View Real GitHub Profile
+           className="block w-full text-center bg-gray-700 hover:bg-gray-600 py-2 rounded-lg text-white text-sm font-bold border border-gray-600 transition-all">
+           🔗 View Real GitHub Profile
         </a>
 
-        {/* AI Analysis */}
         {!analysis ? (
           <button onClick={checkFit} disabled={loading}
-            className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:opacity-90 py-2 rounded text-white font-bold text-sm transition-all shadow-lg">
-            {loading ? "Analyzing Compatibility..." : "⚡ Check AI Compatibility"}
+            className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:opacity-90 py-2 rounded-lg text-white font-bold text-sm transition-all shadow-lg">
+            {loading ? "Analyzing..." : "⚡ Check AI Compatibility"}
           </button>
         ) : (
-          <div className="bg-gray-900 p-3 rounded text-sm border border-green-500/50 animate-fade-in">
-            <p className="whitespace-pre-line text-green-300 font-mono text-xs leading-relaxed">
+          <div className="bg-gray-900/80 p-3 rounded-lg text-sm border border-green-500/30">
+            <p className="text-green-300 font-mono text-xs leading-relaxed">
               {analysis}
             </p>
           </div>
@@ -88,7 +88,7 @@ const TalentMatchmaker = () => {
       }
     } catch (err) {
       console.error(err);
-      alert("Error fetching from GitHub.");
+      alert("Error fetching from GitHub. Check console.");
     }
     setIsLoading(false);
   };
@@ -97,29 +97,34 @@ const TalentMatchmaker = () => {
   const loadMore = () => { const nextPage = page + 1; setPage(nextPage); fetchTalent(nextPage, true); };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
+    <div className="min-h-screen bg-gray-900 text-white p-8 font-sans">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">
+        <h1 className="text-4xl font-extrabold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">
           🇮🇳 India Tech Talent Scout
         </h1>
-        <p className="text-center text-gray-400 mb-8">
+        <p className="text-center text-gray-400 mb-8 text-lg">
           Find real Indian developers via GitHub API and analyze fit with Gemini AI.
         </p>
 
         {/* Search Section */}
-        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 mb-8 shadow-xl">
-          <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-gray-800 p-8 rounded-2xl border border-gray-700 mb-10 shadow-xl">
+          <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <label className="text-sm text-blue-300 font-bold block mb-2">1. Your Skills (For AI Match)</label>
-              <input type="text" placeholder="e.g. Marketing, Business" className="w-full p-3 rounded bg-gray-700 border border-gray-600 text-white outline-none focus:border-blue-500"
+              <label className="text-sm text-blue-300 font-bold block mb-2 uppercase tracking-wide">1. Your Skills (For AI Match)</label>
+              <input type="text" placeholder="e.g. Marketing, Business Strategy" 
+                className="w-full p-4 rounded-xl bg-gray-700 border border-gray-600 text-white outline-none focus:border-blue-500 transition-colors"
                 value={mySkills} onChange={e => setMySkills(e.target.value)} />
             </div>
             <div>
-              <label className="text-sm text-green-300 font-bold block mb-2">2. Search Developer Skills</label>
+              <label className="text-sm text-green-300 font-bold block mb-2 uppercase tracking-wide">2. Search Developer Skills</label>
               <div className="flex gap-2">
-                <input type="text" placeholder="e.g. React, Python" className="w-full p-3 rounded bg-gray-700 border border-gray-600 text-white outline-none focus:border-green-500"
-                  value={searchSkill} onChange={e => setSearchSkill(e.target.value)} />
-                <button onClick={handleSearch} disabled={isLoading} className="bg-green-600 hover:bg-green-500 px-6 rounded font-bold shadow-lg shadow-green-600/20 transition-all">
+                <input type="text" placeholder="e.g. React, Python, Django" 
+                  className="w-full p-4 rounded-xl bg-gray-700 border border-gray-600 text-white outline-none focus:border-green-500 transition-colors"
+                  value={searchSkill} onChange={e => setSearchSkill(e.target.value)} 
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <button onClick={handleSearch} disabled={isLoading} 
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 px-8 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50">
                   {isLoading && page === 1 ? "..." : "Search"}
                 </button>
               </div>
@@ -136,8 +141,9 @@ const TalentMatchmaker = () => {
 
         {/* Load More Button */}
         {results.length > 0 && (
-          <div className="text-center mt-10">
-            <button onClick={loadMore} disabled={isLoading} className="bg-gray-700 hover:bg-gray-600 border border-gray-500 text-white px-8 py-3 rounded-full font-bold transition-all transform hover:scale-105">
+          <div className="text-center mt-12">
+            <button onClick={loadMore} disabled={isLoading} 
+              className="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white px-8 py-3 rounded-full font-bold transition-all transform hover:scale-105 shadow-lg">
               {isLoading ? "Loading..." : "➕ Load More Developers"}
             </button>
           </div>

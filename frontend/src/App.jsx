@@ -8,8 +8,8 @@ import IdeaAnalyzer from './pages/IdeaAnalyzer';
 import IdeaGenerator from './pages/IdeaGenerator';
 import TalentMatchmaker from './pages/TalentMatchmaker';
 import MarketHeatmap from './pages/MarketHeatmap'; 
-import BrandNameGenerator from './pages/BrandNameGenerator';
 import PitchDeckGenerator from './pages/PitchDeckGenerator';
+import ValuationTool from './pages/ValuationTool';
 
 function App() {
   return (
@@ -34,8 +34,8 @@ function App() {
           {/* Phase 4: Market Trends & Heatmap */}
           <Route path="/market" element={<MarketHeatmap />} />
 
-          {/* Phase 5. Brand Name Generator */}
-          <Route path="/brand" element={<BrandNameGenerator />} />
+          {/* Phase 5. Valution result */}
+          <Route path="/valuation" element={<ValuationTool />} />
 
           {/* Phase 6. Pitch Deck Generator*/}
           <Route path="/pitch" element={<PitchDeckGenerator />} />

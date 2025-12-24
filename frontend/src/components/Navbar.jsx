@@ -17,20 +17,18 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop Menu - CORRECTED LINKS */}
+          {/* Desktop Menu - UPDATED LINKS */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-2">
               <NavLink to="/" current={location.pathname}>Home</NavLink>
-              <NavLink to="/analyze" current={location.pathname}>Feasibility</NavLink>
+              <NavLink to="/analyze" current={location.pathname}>Idea Analyzer</NavLink>
               <NavLink to="/generate" current={location.pathname}>Idea Gen</NavLink>
+              <NavLink to="/valuation" current={location.pathname}>Valuation</NavLink>
               <NavLink to="/talent" current={location.pathname}>Talent Scout</NavLink>
               <NavLink to="/market" current={location.pathname}>Market Trends</NavLink>
-              <NavLink to="/brand" current={location.pathname}>Brand Names</NavLink>
               <NavLink to="/pitch" current={location.pathname}>Pitch Deck</NavLink>
             </div>
           </div>
-
-          {/* Login/Signup Buttons REMOVED */}
 
         </div>
       </div>
