@@ -28,13 +28,7 @@ def get_ml_score(data):
         le_sector = artifacts.get('le_sector')
         le_market = artifacts.get('le_market')
 
-        # Map UI Text to Numbers
-        team_size_map = {
-            "Solo Founder": 1,
-            "2-4 Employees": 3,
-            "5-10 Employees": 7,
-            "10+ Employees": 15
-        }
+        team_size_map = { "Solo Founder": 1, "2-4 Employees": 3, "5-10 Employees": 7, "10+ Employees": 15 }
         raw_team_text = data.get('teamSize', 'Solo Founder').strip()
         numeric_team_size = team_size_map.get(raw_team_text, 1)
 
@@ -45,14 +39,10 @@ def get_ml_score(data):
             sector_encoded, market_encoded = 0, 0
         
         input_df = pd.DataFrame([[
-            float(data.get('funding', 0)),
-            numeric_team_size,
-            sector_encoded,
-            market_encoded,
-            1 
+            float(data.get('funding', 0)), numeric_team_size,
+            sector_encoded, market_encoded, 1 
         ]], columns=['Funding', 'TeamSize', 'Sector', 'MarketSize', 'Competition'])
 
-        # Predict probability from the trained Random Forest
         return int(model.predict_proba(input_df)[0][1] * 100)
     except Exception as e:
         print(f"❌ ML Error: {e}")
@@ -66,61 +56,73 @@ def analyze_startup():
         data = request.get_json()
         startup_name = data.get('startupName', '').strip()
         
-        # 1. Check CSV for Historical Ground Truth
         final_score = None
         source = "Random Forest Model (Trained)"
         
+        # 1. ROBUST CSV CHECK
         if os.path.exists(CSV_PATH):
-            df = pd.read_csv(CSV_PATH)
-            match = df[df['StartupName'].str.lower() == startup_name.lower()]
-            
-            if not match.empty:
-                # NEW: Look for specific SuccessProb column first
-                if 'SuccessProb' in df.columns:
-                    final_score = int(match.iloc[0]['SuccessProb'])
-                else:
-                    # Fallback to binary outcome if column doesn't exist
-                    final_score = int(match.iloc[0]['Outcome'] * 100)
+            try:
+                df = pd.read_csv(CSV_PATH)
                 
-                source = "Local Dataset (Exact Match)"
+                # --- FIX 1: Clean Headers AND Data ---
+                df.columns = df.columns.str.strip() # Clean headers
+                if 'StartupName' in df.columns:
+                    # Clean the actual names in the rows (remove hidden spaces)
+                    df['StartupName'] = df['StartupName'].astype(str).str.strip()
+                    
+                    match = df[df['StartupName'].str.lower() == startup_name.lower()]
+                    
+                    if not match.empty:
+                        if 'SuccessProb' in df.columns:
+                            final_score = int(match.iloc[0]['SuccessProb'])
+                        elif 'Outcome' in df.columns:
+                            final_score = int(match.iloc[0]['Outcome'] * 100)
+                        source = "Local Dataset (Exact Match)"
+                else:
+                    print("❌ ERROR: 'StartupName' column missing from CSV!")
 
-        # 2. Use ML Model if no exact CSV match is found
+            except Exception as csv_err:
+                print(f"❌ CSV Read Error: {csv_err}")
+
+        # 2. Fallback to ML
         if final_score is None:
+            print(f"🤖 Startup '{startup_name}' not found in CSV. Using ML Model.")
             final_score = get_ml_score(data)
 
-        # 3. Gemini Qualitative Analysis
+        # 3. Gemini Analysis with FALLBACK
         api_key = os.getenv("GEMINI_API_KEY")
         prompt = f"""
-        Act as a Venture Capital Analyst. 
-        Analyze the startup '{startup_name}' which has a calculated feasibility score of {final_score}/100.
-        
-        Return a JSON object with this EXACT structure:
-        {{
-            "analysis": "A professional 2-sentence summary.",
-            "recommendations": [
-                "Specific strategic tip 1",
-                "Specific strategic tip 2",
-                "Specific strategic tip 3"
-            ]
-        }}
-        Crucial: 'recommendations' MUST be a list of simple strings.
+        Act as a Venture Capital Analyst. Analyze '{startup_name}' (Score: {final_score}/100).
+        Return JSON: {{ "analysis": "2 sentences", "recommendations": ["Tip 1", "Tip 2", "Tip 3"] }}
         """
         
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={api_key}"
         response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
         
+        ai_analysis = "AI analysis unavailable at the moment."
+        ai_recs = ["Focus on MVP", "Validate market fit", "Optimize cash burn"]
+
         if response.status_code == 200:
-            gen_text = response.json()['candidates'][0]['content']['parts'][0]['text']
-            clean_text = gen_text.replace("```json", "").replace("```", "").strip()
-            ai_content = json.loads(clean_text)
-            
-            return jsonify({
-                "score": final_score,
-                "analysis": ai_content.get('analysis'),
-                "recommendations": ai_content.get('recommendations'),
-                "source": source
-            }), 200
+            try:
+                gen_text = response.json()['candidates'][0]['content']['parts'][0]['text']
+                clean_text = gen_text.replace("```json", "").replace("```", "").strip()
+                ai_content = json.loads(clean_text)
+                ai_analysis = ai_content.get('analysis', ai_analysis)
+                ai_recs = ai_content.get('recommendations', ai_recs)
+            except Exception as parse_err:
+                print(f"⚠️ JSON Parse Error: {parse_err}")
+        else:
+            print(f"⚠️ Gemini API Failed: {response.status_code} - {response.text}")
+
+        # --- FIX 2: ALWAYS RETURN A RESPONSE ---
+        return jsonify({
+            "score": final_score,
+            "analysis": ai_analysis,
+            "recommendations": ai_recs,
+            "source": source
+        }), 200
             
     except Exception as e:
-        print(f"Backend Error: {e}")
+        print(f"🔥 Backend Critical Error: {e}")
+        # Always return JSON error, never just crash
         return jsonify({"error": str(e)}), 500
