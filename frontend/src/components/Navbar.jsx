@@ -26,7 +26,6 @@ const Navbar = () => {
               <NavLink to="/valuation" current={location.pathname}>Valuation</NavLink>
               <NavLink to="/talent" current={location.pathname}>Talent Scout</NavLink>
               <NavLink to="/market" current={location.pathname}>Market Trends</NavLink>
-              <NavLink to="/pitch" current={location.pathname}>Pitch Deck</NavLink>
             </div>
           </div>
 

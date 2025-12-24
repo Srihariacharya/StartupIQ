@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
-import { Sparkles, AlertCircle, Info } from 'lucide-react';
+import { Sparkles, Info, FileText, Download } from 'lucide-react';
+import jsPDF from 'jspdf'; // <--- Ensure installed: npm install jspdf
 
 const IdeaAnalyzer = () => {
   const location = useLocation();
@@ -35,7 +36,6 @@ const IdeaAnalyzer = () => {
     setResult(null);
 
     try {
-        // Points to the consolidated Flask API route
         const response = await axios.post('http://127.0.0.1:5000/api/analyze', formData);
         setResult(response.data);
     } catch (err) {
@@ -43,6 +43,153 @@ const IdeaAnalyzer = () => {
         setError("CORS or Connection Error. Ensure Backend is running on port 5000.");
     } finally {
         setLoading(false);
+    }
+  };
+
+  // --- 📄 PDF GENERATOR (Fixed for your Data Structure) ---
+  const downloadReport = () => {
+    console.log("Starting PDF generation...");
+    if (!result) {
+        alert("No results to download. Please analyze an idea first.");
+        return;
+    }
+
+    try {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 20;
+        const contentWidth = pageWidth - (margin * 2);
+
+        // --- Helper: Safely Wrap Text ---
+        const addWrappedText = (text, y, fontSize = 12, color = [60, 60, 60]) => {
+          doc.setFontSize(fontSize);
+          doc.setTextColor(...color);
+          const safeText = String(text || "N/A"); // Safety check
+          const lines = doc.splitTextToSize(safeText, contentWidth);
+          doc.text(lines, margin, y);
+          return y + (lines.length * (fontSize / 2)) + 6; 
+        };
+
+        // ================= PAGE 1 =================
+        // Header (Blue Bar)
+        doc.setFillColor(41, 128, 185); 
+        doc.rect(0, 0, pageWidth, 40, 'F');
+        doc.setFontSize(26);
+        doc.setTextColor(255, 255, 255);
+        doc.text("Startup Feasibility Report", margin, 20);
+        doc.setFontSize(12);
+        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, margin, 32);
+
+        let yPos = 60;
+
+        // Section 1: Concept
+        doc.setFontSize(16);
+        doc.setTextColor(41, 128, 185);
+        doc.text("1. Startup Concept", margin, yPos);
+        yPos += 10;
+        
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Name: ${formData.startupName || "My Startup"}`, margin, yPos);
+        yPos += 8;
+        doc.text(`Industry: ${formData.industry || "General"}`, margin, yPos);
+        yPos += 12;
+        
+        yPos = addWrappedText(formData.description, yPos, 12, [60, 60, 60]);
+        yPos += 10;
+
+        // Section 2: Business Context
+        doc.setFontSize(16);
+        doc.setTextColor(41, 128, 185);
+        doc.text("2. Business Context", margin, yPos);
+        yPos += 10;
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text(`Initial Funding: ${formData.funding || 0} Lakhs`, margin, yPos);
+        yPos += 8;
+        doc.text(`Team Size: ${formData.teamSize || "N/A"}`, margin, yPos);
+        yPos += 8;
+        doc.text(`Target Market: ${formData.marketSize || "N/A"}`, margin, yPos);
+        yPos += 15;
+
+        // Section 3: AI Verdict
+        doc.setDrawColor(200);
+        doc.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 15;
+
+        doc.setFontSize(16);
+        doc.setTextColor(41, 128, 185);
+        doc.text("3. AI Feasibility Analysis", margin, yPos);
+        yPos += 15;
+
+        // Score Box
+        doc.setFillColor(245, 247, 250);
+        doc.roundedRect(margin, yPos, contentWidth, 35, 3, 3, 'F');
+        
+        doc.setFontSize(22);
+        const score = result.score || 0;
+        if (score > 70) doc.setTextColor(39, 174, 96); 
+        else if (score > 40) doc.setTextColor(243, 156, 18); 
+        else doc.setTextColor(192, 57, 43); 
+        
+        doc.text(`Success Probability: ${score}%`, margin + 10, yPos + 15);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text("(Based on historical data & AI analysis)", margin + 10, yPos + 25);
+        
+        yPos += 45;
+        
+        // Analysis Text
+        doc.setFontSize(14);
+        doc.setTextColor(0);
+        doc.text("AI Verdict:", margin, yPos);
+        yPos += 8;
+        yPos = addWrappedText(result.analysis, yPos, 11, [60, 60, 60]);
+
+        // Footer
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text("StartupIQ - AI Analysis Engine", margin, 280);
+
+        // ================= PAGE 2 =================
+        doc.addPage();
+        doc.setFillColor(240, 240, 240);
+        doc.rect(0, 0, pageWidth, 30, 'F');
+        doc.setFontSize(18);
+        doc.setTextColor(50);
+        doc.text("Strategic Recommendations", margin, 20);
+
+        yPos = 50;
+
+        // SAFETY FIX: Handle recommendations array safely
+        const recs = result.recommendations || [];
+        if (recs.length > 0) {
+            recs.forEach((rec) => {
+                doc.setFillColor(41, 128, 185);
+                doc.circle(margin + 2, yPos - 1, 1.5, 'F');
+                
+                let text = "";
+                if (typeof rec === 'object') {
+                    // Handle object format {title: "...", content: "..."}
+                    text = `${rec.title || "Insight"}: ${rec.tip || rec.content || ""}`;
+                } else {
+                    // Handle simple string format
+                    text = String(rec);
+                }
+
+                yPos = addWrappedText(text, yPos, 12, [60, 60, 60]);
+                yPos += 5;
+            });
+        } else {
+            doc.text("No specific recommendations generated.", margin, yPos);
+        }
+
+        console.log("Saving PDF...");
+        doc.save(`${formData.startupName || "Startup"}_Feasibility_Report.pdf`);
+
+    } catch (err) {
+        console.error("PDF GENERATION ERROR:", err);
+        alert("Error generating PDF. Check console for details.");
     }
   };
 
@@ -187,7 +334,7 @@ const IdeaAnalyzer = () => {
                         </div>
                         <p className="mt-2 text-gray-400 font-semibold tracking-wider uppercase text-sm mb-4">Probability</p>
                         
-                        {/* THE NEW SOURCE BADGE */}
+                        {/* Source Badge */}
                         <div className="flex flex-col items-center gap-1">
                             <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">
                                 Analysis Source
@@ -207,14 +354,13 @@ const IdeaAnalyzer = () => {
                         <h3 className="text-2xl font-bold mb-2 text-white">AI Verdict</h3>
                         <p className="text-gray-300 mb-6 text-lg leading-relaxed">{result.analysis}</p>
                         
-                        <div className="bg-gray-700/50 p-5 rounded-lg border-l-4 border-blue-500">
+                        <div className="bg-gray-700/50 p-5 rounded-lg border-l-4 border-blue-500 mb-6">
                             <h4 className="font-bold text-blue-400 mb-3 flex items-center gap-2">
                                 <Info size={18}/> Strategic Advice
                             </h4>
                             <ul className="space-y-4">
                                 {result.recommendations && result.recommendations.map((rec, index) => (
                                     <li key={index} className="text-sm">
-                                        {/* Object vs String Guard */}
                                         {typeof rec === 'object' ? (
                                             <>
                                               <strong className="text-blue-300 block mb-1">
@@ -232,10 +378,14 @@ const IdeaAnalyzer = () => {
                             </ul>
                         </div>
                         
-                        {/* Footer Details */}
-                        <div className="mt-6 pt-4 border-t border-gray-700 flex justify-between items-center text-[10px] text-gray-500 uppercase tracking-widest">
-                            <span>Method: Random Forest Classifier</span>
-                            <span>Model Status: Active</span>
+                        {/* 👇 NEW DOWNLOAD BUTTON 👇 */}
+                        <div className="flex justify-start">
+                            <button 
+                                onClick={downloadReport}
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-900/20"
+                            >
+                                <FileText size={18}/> Download Feasibility Report (PDF) <Download size={18}/>
+                            </button>
                         </div>
                     </div>
                 </div>
