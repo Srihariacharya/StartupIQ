@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const FeatureCard = ({ title, desc, icon, link, color }) => (
+// Updated Component: Accepts 'className' to control width dynamically
+const FeatureCard = ({ title, desc, icon, link, color, className = "" }) => (
   <Link 
     to={link} 
-    className="group relative bg-gray-800 p-8 rounded-2xl border border-gray-700 hover:border-gray-500 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden"
+    className={`group relative bg-gray-800 p-8 rounded-2xl border border-gray-700 hover:border-gray-500 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-col ${className}`}
   >
     {/* Background Glow Effect */}
     <div className={`absolute top-0 right-0 w-32 h-32 bg-${color}-500/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-${color}-500/20`}></div>
@@ -14,7 +15,7 @@ const FeatureCard = ({ title, desc, icon, link, color }) => (
     </div>
     
     <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">{title}</h3>
-    <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+    <p className="text-gray-400 text-sm leading-relaxed flex-grow">{desc}</p>
     
     <div className="mt-6 flex items-center text-sm font-bold text-gray-500 group-hover:text-white transition-colors">
       Launch Tool <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
@@ -28,7 +29,6 @@ const Home = () => {
       
       {/* --- HERO SECTION --- */}
       <div className="relative overflow-hidden">
-        {/* Abstract Background Shapes */}
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
         <div className="absolute bottom-[10%] right-[-10%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px]"></div>
 
@@ -59,11 +59,12 @@ const Home = () => {
         </div>
       </div>
 
-      {/* --- FEATURES GRID --- */}
+      {/* --- FEATURES SECTION --- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <h2 className="text-3xl font-bold text-center mb-12">Everything You Need to Launch 🚀</h2>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+        {/* Changed from GRID to FLEX to center the last row */}
+        <div className="flex flex-wrap justify-center gap-6">
           
           {/* 1. Feasibility Analyzer */}
           <FeatureCard 
@@ -72,6 +73,7 @@ const Home = () => {
             icon="🧠" 
             link="/analyze"
             color="blue"
+            className="w-full md:w-[45%] lg:w-[30%]" 
           />
 
           {/* 2. Idea Generator */}
@@ -81,42 +83,37 @@ const Home = () => {
             icon="💡" 
             link="/generate"
             color="orange"
+            className="w-full md:w-[45%] lg:w-[30%]"
           />
 
-          {/* 3. Talent Scout */}
+          {/* 3. Valuation Tool */}
+          <FeatureCard 
+            title="Valuation Tool" 
+            desc="Estimate your startup's pre-money valuation using industry data and ML models."
+            icon="💰" 
+            link="/valuation"
+            color="emerald"
+            className="w-full md:w-[45%] lg:w-[30%]"
+          />
+
+          {/* 4. Talent Scout */}
           <FeatureCard 
             title="Talent Scout" 
             desc="Find real developers from GitHub (India) and check team compatibility with AI."
             icon="🐙" 
             link="/talent"
             color="green"
+            className="w-full md:w-[45%] lg:w-[30%]"
           />
 
-          {/* 4. Market Heatmap */}
+          {/* 5. Market Heatmap */}
           <FeatureCard 
             title="Market Trends" 
             desc="Visualize growth charts, competitor analysis, and sentiment for any industry."
             icon="📈" 
             link="/market"
             color="purple"
-          />
-
-          {/* 5. Brand Names (NEW) */}
-          <FeatureCard 
-            title="Brand Names" 
-            desc="Generate catchy, available, and brandable names for your startup using AI."
-            icon="🏷️" 
-            link="/brand"
-            color="pink"
-          />
-
-          {/* 6. Pitch Deck (NEW) */}
-          <FeatureCard 
-            title="Pitch Deck" 
-            desc="Create investor-ready slide decks and storyboards in minutes."
-            icon="📽️" 
-            link="/pitch"
-            color="indigo"
+            className="w-full md:w-[45%] lg:w-[30%]"
           />
 
         </div>

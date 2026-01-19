@@ -14,13 +14,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, '..', 'data', 'startup_data.csv')
 MODEL_PATH = os.path.join(BASE_DIR, '..', 'ml', 'models', 'startup_predictor.pkl')
 
-print(f"✅ CSV PATH: {os.path.abspath(CSV_PATH)}")
-print(f"✅ MODEL PATH: {os.path.abspath(MODEL_PATH)}")
+print(f"CSV PATH: {os.path.abspath(CSV_PATH)}")
+print(f"MODEL PATH: {os.path.abspath(MODEL_PATH)}")
 
 def get_ml_score(data):
     try:
         if not os.path.exists(MODEL_PATH):
-            print(f"⚠️ Model not found at {MODEL_PATH}")
+            print(f"Model not found at {MODEL_PATH}")
             return 50
         
         artifacts = joblib.load(MODEL_PATH)
@@ -79,14 +79,14 @@ def analyze_startup():
                             final_score = int(match.iloc[0]['Outcome'] * 100)
                         source = "Local Dataset (Exact Match)"
                 else:
-                    print("❌ ERROR: 'StartupName' column missing from CSV!")
+                    print(" ERROR: 'StartupName' column missing from CSV!")
 
             except Exception as csv_err:
-                print(f"❌ CSV Read Error: {csv_err}")
+                print(f"CSV Read Error: {csv_err}")
 
         # 2. Fallback to ML
         if final_score is None:
-            print(f"🤖 Startup '{startup_name}' not found in CSV. Using ML Model.")
+            print(f"Startup '{startup_name}' not found in CSV. Using ML Model.")
             final_score = get_ml_score(data)
 
         # 3. Gemini Analysis with FALLBACK
@@ -110,9 +110,9 @@ def analyze_startup():
                 ai_analysis = ai_content.get('analysis', ai_analysis)
                 ai_recs = ai_content.get('recommendations', ai_recs)
             except Exception as parse_err:
-                print(f"⚠️ JSON Parse Error: {parse_err}")
+                print(f"JSON Parse Error: {parse_err}")
         else:
-            print(f"⚠️ Gemini API Failed: {response.status_code} - {response.text}")
+            print(f"Gemini API Failed: {response.status_code} - {response.text}")
 
         # --- FIX 2: ALWAYS RETURN A RESPONSE ---
         return jsonify({
@@ -123,6 +123,6 @@ def analyze_startup():
         }), 200
             
     except Exception as e:
-        print(f"🔥 Backend Critical Error: {e}")
+        print(f"Backend Critical Error: {e}")
         # Always return JSON error, never just crash
         return jsonify({"error": str(e)}), 500

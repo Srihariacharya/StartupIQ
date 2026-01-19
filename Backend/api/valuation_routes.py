@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import os
-import json  # <--- WAS MISSING
+import json
 import joblib
-import google.generativeai as genai # <--- WAS MISSING
+import random 
+import google.generativeai as genai
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from sklearn.linear_model import LinearRegression
@@ -11,10 +12,9 @@ from sklearn.linear_model import LinearRegression
 valuation_bp = Blueprint('valuation', __name__)
 
 # --- CONFIGURATION ---
-# Load API Key for Gemini (Auto-Fill Feature)
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
-    print("⚠️ WARNING: GEMINI_API_KEY not found. Auto-Fill will use fallback data.")
+    print("⚠️ WARNING: GEMINI_API_KEY not found.")
 else:
     genai.configure(api_key=api_key)
     print("✅ Valuation Module: Gemini API Key Loaded.")
@@ -50,7 +50,7 @@ def get_trained_model():
 
 local_model = get_trained_model()
 
-# --- ROUTE 1: PREDICT VALUATION (ML) ---
+# --- ROUTE 1: PREDICT VALUATION (ML + LOGIC HYBRID) ---
 @valuation_bp.route('/predict_valuation', methods=['POST', 'OPTIONS'])
 @cross_origin()
 def predict_valuation():
@@ -60,27 +60,57 @@ def predict_valuation():
     global local_model
     if not local_model:
         local_model = get_trained_model()
-        if not local_model:
-            return jsonify({"error": "Model training failed."}), 500
 
     try:
         data = request.get_json()
         
-        # Inputs
-        revenue = float(data.get('revenue', 0)) 
+        # --- INPUTS ---
+        revenue_in_lakhs = float(data.get('revenue', 0)) 
         growth = float(data.get('growth', 0))
-        users = float(data.get('users', 0))
+        users_in_thousands = float(data.get('users', 0))
         
-        input_features = np.array([[revenue, growth, users]])
-        prediction = local_model.predict(input_features)[0]
+        # --- STEP 1: ML PREDICTION (For Base Stability) ---
+        # We pass "0" as growth to the model so it doesn't mess up the math
+        # We only ask the model: "How much is this Revenue & User count worth?"
+        input_features = np.array([[revenue_in_lakhs, 0, users_in_thousands]])
+        base_valuation_crores = local_model.predict(input_features)[0]
         
-        # Formatting
-        val_cap = max(0.1, round(prediction, 2)) 
+        # --- STEP 2: MANUAL GROWTH BOOST (Guaranteed Positive) ---
+        # We add value MANUALLY based on growth percentage.
+        # Logic: Every 10% growth adds 5% to the valuation.
+        growth_multiplier = 1 + (growth * 0.005) 
         
+        final_valuation = base_valuation_crores * growth_multiplier
+        
+        # --- STEP 3: REALISM CHECK ---
+        # If it's a tiny startup (Revenue < 1 Lakh), force valuation to be small (Lakhs/Thousands)
+        # This prevents "0.1 Crores" showing up for a ₹500 startup
+        if revenue_in_lakhs < 1:
+             # Cap value at roughly 10x revenue for tiny projects
+             max_allowed = (revenue_in_lakhs * 10) / 100 # Convert back to Crores
+             final_valuation = min(final_valuation, max_allowed)
+
+        # Ensure positive
+        final_valuation = max(0.001, final_valuation)
+
+        # --- FORMATTING LOGIC ---
+        val_in_rupees = final_valuation * 10000000
+        formatted_result = ""
+        
+        if val_in_rupees >= 10000000:
+            val = round(val_in_rupees / 10000000, 2)
+            formatted_result = f"₹{val} Crores"
+        elif val_in_rupees >= 100000:
+            val = round(val_in_rupees / 100000, 1)
+            formatted_result = f"₹{val} Lakhs"
+        else:
+            val = round(val_in_rupees / 1000, 1)
+            formatted_result = f"₹{val} Thousand"
+
         return jsonify({
-            "valuation": f"₹{val_cap} Crores",
-            "details": f"Calculated based on ₹{revenue} Lakhs MRR & {growth}% growth.",
-            "algorithm": "Linear Regression (Locally Trained)"
+            "valuation": formatted_result,
+            "details": f"Calculated for {users_in_thousands}k Users & ₹{revenue_in_lakhs}L Revenue.",
+            "algorithm": "Hybrid Regression (ML + Growth Logic)"
         }), 200
 
     except Exception as e:
@@ -96,38 +126,45 @@ def estimate_metrics():
     try:
         data = request.get_json()
         industry = data.get('industry', 'Technology')
-        print(f"🤖 AI Estimating numbers for: {industry}")
-
-        # Safety Check: Is API Key working?
-        if not api_key:
-            raise ValueError("No Gemini API Key configured")
-
-        model = genai.GenerativeModel('gemini-2.5-flash')
         
+        if not api_key:
+            raise ValueError("No Gemini API Key")
+
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # --- FIX FOR REPETITIVE NUMBERS ---
+        scenarios = [
+            "a viral high-growth startup",
+            "a steady bootstrapped business",
+            "an aggressive venture-backed startup",
+            "an early-stage research project"
+        ]
+        chosen_scenario = random.choice(scenarios)
+
         prompt = f"""
-        I am launching a seed-stage startup in the "{industry}" industry in India.
-        Provide REALISTIC conservative estimates for Year 1 metrics.
+        I am launching {chosen_scenario} in the "{industry}" industry in India.
+        Provide OPTIMISTIC Year 1 metrics (Seed Stage).
         
         Return STRICT JSON format (no markdown):
         {{
-            "revenue": 15, 
-            "growth": 20, 
-            "users": 5
+            "revenue": (number between 5 and 50), 
+            "growth": (number between 15 and 100), 
+            "users": (number between 1 and 20)
         }}
         """
         
         response = model.generate_content(prompt)
-        # Clean the response to ensure it's valid JSON
         clean_text = response.text.replace("```json", "").replace("```", "").strip()
         estimates = json.loads(clean_text)
         
         return jsonify(estimates), 200
         
     except Exception as e:
-        print(f"⚠️ Auto-Fill Failed: {e}") # Check your terminal for this error!
-        # Fallback values if AI fails
+        print(f"⚠️ Auto-Fill Failed: {e}")
+        
+        # Fallback with randomness if API fails
         return jsonify({
-            "revenue": 5, 
-            "growth": 15, 
-            "users": 1
+            "revenue": random.randint(5, 20), 
+            "growth": random.randint(10, 40), 
+            "users": random.randint(1, 10)
         }), 200
