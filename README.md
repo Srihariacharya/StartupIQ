@@ -54,12 +54,15 @@
 
 ## 📸 Usage
 
-1.  **StartupIQ Main Input Dashboard**
-    <img width="350" height="350" alt="image" src="https://github.com/user-attachments/assets/c838343b-25fc-4184-9705-fa867161d1b3" />
-3.  **Enter Pitch:** Type your startup idea (e.g., "AI-driven vertical farming").
-4.  **Set Metrics:** Adjust funding and team size sliders.
-5.  **Analyze:** The system runs the Hybrid Engine.
-6.  **Download:** Get your Feasibility Report PDF instantly.
+1.  ### **StartupIQ Main Input Dashboard**
+    <img width="400" height="350" alt="image" src="https://github.com/user-attachments/assets/c838343b-25fc-4184-9705-fa867161d1b3" />
+2.  ### **Enter Pitch:** AI Feasibility Analysis Results
+    <img width="400" height="350" alt="image" src="https://github.com/user-attachments/assets/ba421803-976d-4615-bf5f-6bfb9eb2fe1d" />
+    <img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/7b2d6166-847c-44d4-b30c-7251d3339b8e" />
+3.  ### **Set Metrics:** Quantitative Valuation Estimate
+    <img width="400" height="350" alt="image" src="https://github.com/user-attachments/assets/6d6ac24f-0afa-4b14-bd57-9578df7ae047" />
+4.  ### **Download:** Get your Feasibility Report PDF instantly.
+    <img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/6cea0b5c-4fe5-4adb-89bf-574e1b6f955c" />
 
 
 
