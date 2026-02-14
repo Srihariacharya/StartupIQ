@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Import for navigation
+import { useNavigate } from 'react-router-dom'; 
 
 const IdeaGenerator = () => {
   const [keywords, setKeywords] = useState('');
   const [ideas, setIdeas] = useState([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // Hook to move between pages
+  const navigate = useNavigate(); 
 
   const handleGenerate = async (e) => {
     e.preventDefault();
     if (!keywords) return alert("Please enter some keywords (e.g. AI, Health, Students)");
 
     setLoading(true);
-    setIdeas([]); // Clear old ideas
+    setIdeas([]); 
 
     try {
-      // FIX 1: Correct URL ('/generate_idea') and Payload ('topic')
       const res = await axios.post('http://127.0.0.1:5000/api/generate_idea', { 
         topic: keywords 
       });
@@ -29,12 +28,11 @@ const IdeaGenerator = () => {
   };
 
   const handleAnalyze = (idea) => {
-    // FIX 2: Navigate to Analyzer and pass the idea data
     navigate('/analyze', { 
       state: { 
         name: idea.name, 
         solution: idea.solution,
-        industry: keywords // Optional: Pass the search term as industry
+        industry: keywords 
       } 
     });
   };

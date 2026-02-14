@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-// No extra icon imports needed based on your current code
 
 // --- CANDIDATE CARD COMPONENT ---
 const CandidateCard = ({ person, mySkills }) => {

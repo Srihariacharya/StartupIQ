@@ -3,13 +3,13 @@ import axios from 'axios';
 import { IndianRupee, TrendingUp, Users, Calculator, Activity, Sparkles } from 'lucide-react';
 
 const ValuationTool = () => {
-  const [industry, setIndustry] = useState(''); // NEW INPUT
+  const [industry, setIndustry] = useState('');
   const [revenue, setRevenue] = useState('');
   const [growth, setGrowth] = useState('');
   const [users, setUsers] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [estimating, setEstimating] = useState(false); // New Loading State
+  const [estimating, setEstimating] = useState(false);
 
   // NEW: Function to ask AI for numbers
   const autoEstimate = async () => {

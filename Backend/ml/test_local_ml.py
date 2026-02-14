@@ -18,8 +18,6 @@ try:
     model = artifacts['model']
     
     # 3. CREATE A TEST CASE (Simulation)
-    # Let's simulate a startup with:
-    # Funding: 75 Lakhs, Team: 5, Sector: 0, Market: 1, Competition: 1
     test_startup = pd.DataFrame([[75.0, 5, 0, 1, 1]], 
                                columns=['Funding', 'TeamSize', 'Sector', 'MarketSize', 'Competition'])
 

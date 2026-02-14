@@ -10,7 +10,7 @@ talent_bp = Blueprint('talent', __name__)
 # --- CONFIGURATION ---
 api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-1.5-flash') # Consistent Model
+model = genai.GenerativeModel('gemini-1.5-flash') 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") 
 
 # --- FALLBACK DATA (Safety Net if GitHub API fails) ---
@@ -48,7 +48,6 @@ def search_talent():
             print("⚠️ GitHub Connection Failed. Using Mock Data.")
             return jsonify(MOCK_DEVELOPERS), 200
 
-        # 2. Handle Rate Limits (403) or Errors
         if response.status_code != 200:
             print(f"⚠️ GitHub API Error ({response.status_code}). Switching to Mock Data.")
             return jsonify(MOCK_DEVELOPERS), 200

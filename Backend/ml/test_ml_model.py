@@ -16,8 +16,6 @@ if os.path.exists(model_path):
     df = pd.read_csv(data_path)
     # Convert text to numbers just for the test
     X = df[['Funding', 'TeamSize', 'Sector', 'MarketSize', 'Competition']]
-    # Note: In a real test, you'd use a separate test set, 
-    # but for a guide demo, showing training accuracy is fine.
     
     # Simple mapping for the demo
     X_encoded = pd.get_dummies(X) 

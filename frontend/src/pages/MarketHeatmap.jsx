@@ -26,14 +26,11 @@ const MarketHeatmap = () => {
   const navigate = useNavigate();
 
   // --- NEW: SMART DATA CLEANER ---
-  // This fixes the "Invisible Chart" issue by finding the correct keys automatically
   const processSentimentData = (raw_data) => {
     if (!raw_data || !Array.isArray(raw_data)) return [];
     
     return raw_data.map(item => {
-      // Look for keys like 'name', 'sentiment', 'label'
       const nameKey = Object.keys(item).find(k => ['name', 'sentiment', 'label', 'category'].includes(k.toLowerCase())) || 'name';
-      // Look for keys like 'value', 'percentage', 'count'
       const valueKey = Object.keys(item).find(k => ['value', 'percentage', 'count', 'amount', 'share'].includes(k.toLowerCase())) || 'value';
       
       return {
@@ -192,7 +189,7 @@ const MarketHeatmap = () => {
                 <div className="w-full flex justify-center">
                     <PieChart width={300} height={300}>
                       <Pie
-                        data={cleanSentimentData}  // <--- USING CLEANED DATA
+                        data={cleanSentimentData} 
                         dataKey="value"
                         nameKey="name"
                         cx="50%"

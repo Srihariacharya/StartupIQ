@@ -38,8 +38,15 @@ def get_ml_score(data):
         except:
             sector_encoded, market_encoded = 0, 0
         
+        # --- FIX: Convert Rupees to Lakhs ---
+        # User sends: 50000 (Rupees)
+        # Model needs: 0.5 (Lakhs)
+        raw_funding = float(data.get('funding', 0))
+        funding_in_lakhs = raw_funding / 100000.0
+        # ------------------------------------
+
         input_df = pd.DataFrame([[
-            float(data.get('funding', 0)), numeric_team_size,
+            funding_in_lakhs, numeric_team_size,
             sector_encoded, market_encoded, 1 
         ]], columns=['Funding', 'TeamSize', 'Sector', 'MarketSize', 'Competition'])
 
@@ -64,7 +71,7 @@ def analyze_startup():
             try:
                 df = pd.read_csv(CSV_PATH)
                 
-                # --- FIX 1: Clean Headers AND Data ---
+                # ---  Clean Headers AND Data ---
                 df.columns = df.columns.str.strip() # Clean headers
                 if 'StartupName' in df.columns:
                     # Clean the actual names in the rows (remove hidden spaces)
@@ -86,35 +93,45 @@ def analyze_startup():
 
         # 2. Fallback to ML
         if final_score is None:
-            print(f"Startup '{startup_name}' not found in CSV. Using ML Model.")
+            # print(f"Startup '{startup_name}' not found in CSV. Using ML Model.")
             final_score = get_ml_score(data)
 
         # 3. Gemini Analysis with FALLBACK
         api_key = os.getenv("GEMINI_API_KEY")
+        
+        # Updated prompt to handle the Rupee format in text
+        raw_funding = float(data.get('funding', 0))
+        formatted_funding = f"₹{raw_funding:,.0f}"
+
         prompt = f"""
         Act as a Venture Capital Analyst. Analyze '{startup_name}' (Score: {final_score}/100).
+        Funding: {formatted_funding}.
         Return JSON: {{ "analysis": "2 sentences", "recommendations": ["Tip 1", "Tip 2", "Tip 3"] }}
         """
         
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={api_key}"
-        response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
-        
+        # Safe fallback for API call
+        try:
+            response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
+            response_data = response.json() if response.status_code == 200 else {}
+        except:
+            response_data = {}
+
         ai_analysis = "AI analysis unavailable at the moment."
         ai_recs = ["Focus on MVP", "Validate market fit", "Optimize cash burn"]
 
-        if response.status_code == 200:
+        if response_data:
             try:
-                gen_text = response.json()['candidates'][0]['content']['parts'][0]['text']
+                gen_text = response_data['candidates'][0]['content']['parts'][0]['text']
+                
                 clean_text = gen_text.replace("```json", "").replace("```", "").strip()
                 ai_content = json.loads(clean_text)
                 ai_analysis = ai_content.get('analysis', ai_analysis)
                 ai_recs = ai_content.get('recommendations', ai_recs)
             except Exception as parse_err:
                 print(f"JSON Parse Error: {parse_err}")
-        else:
-            print(f"Gemini API Failed: {response.status_code} - {response.text}")
 
-        # --- FIX 2: ALWAYS RETURN A RESPONSE ---
+        # --- ALWAYS RETURN A RESPONSE ---
         return jsonify({
             "score": final_score,
             "analysis": ai_analysis,
@@ -124,5 +141,5 @@ def analyze_startup():
             
     except Exception as e:
         print(f"Backend Critical Error: {e}")
-        # Always return JSON error, never just crash
+
         return jsonify({"error": str(e)}), 500

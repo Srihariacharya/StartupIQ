@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-// Updated Component: Accepts 'className' to control width dynamically
 const FeatureCard = ({ title, desc, icon, link, color, className = "" }) => (
   <Link 
     to={link} 

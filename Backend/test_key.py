@@ -10,7 +10,7 @@ print(f"🔑 Testing Key: {api_key[:10]}...")
 try:
     genai.configure(api_key=api_key)
     # We specifically test the Free Model
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content("Hello, are you working?")
     
     print("\n✅ SUCCESS! The API Key is working.")

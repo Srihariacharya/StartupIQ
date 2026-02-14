@@ -70,21 +70,15 @@ def predict_valuation():
         users_in_thousands = float(data.get('users', 0))
         
         # --- STEP 1: ML PREDICTION (For Base Stability) ---
-        # We pass "0" as growth to the model so it doesn't mess up the math
-        # We only ask the model: "How much is this Revenue & User count worth?"
         input_features = np.array([[revenue_in_lakhs, 0, users_in_thousands]])
         base_valuation_crores = local_model.predict(input_features)[0]
         
         # --- STEP 2: MANUAL GROWTH BOOST (Guaranteed Positive) ---
-        # We add value MANUALLY based on growth percentage.
-        # Logic: Every 10% growth adds 5% to the valuation.
         growth_multiplier = 1 + (growth * 0.005) 
         
         final_valuation = base_valuation_crores * growth_multiplier
         
         # --- STEP 3: REALISM CHECK ---
-        # If it's a tiny startup (Revenue < 1 Lakh), force valuation to be small (Lakhs/Thousands)
-        # This prevents "0.1 Crores" showing up for a ₹500 startup
         if revenue_in_lakhs < 1:
              # Cap value at roughly 10x revenue for tiny projects
              max_allowed = (revenue_in_lakhs * 10) / 100 # Convert back to Crores

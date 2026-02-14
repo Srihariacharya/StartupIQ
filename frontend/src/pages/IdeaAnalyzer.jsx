@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { Sparkles, Info, FileText, Download } from 'lucide-react';
-import jsPDF from 'jspdf'; // <--- Ensure installed: npm install jspdf
+import jsPDF from 'jspdf'; 
 
 const IdeaAnalyzer = () => {
   const location = useLocation();
@@ -46,7 +46,7 @@ const IdeaAnalyzer = () => {
     }
   };
 
-  // --- 📄 PDF GENERATOR (Fixed for your Data Structure) ---
+  // --- 📄 PDF GENERATOR ---
   const downloadReport = () => {
     console.log("Starting PDF generation...");
     if (!result) {
@@ -71,7 +71,6 @@ const IdeaAnalyzer = () => {
         };
 
         // ================= PAGE 1 =================
-        // Header (Blue Bar)
         doc.setFillColor(41, 128, 185); 
         doc.rect(0, 0, pageWidth, 40, 'F');
         doc.setFontSize(26);
@@ -161,7 +160,7 @@ const IdeaAnalyzer = () => {
 
         yPos = 50;
 
-        // SAFETY FIX: Handle recommendations array safely
+        // Handle recommendations array safely
         const recs = result.recommendations || [];
         if (recs.length > 0) {
             recs.forEach((rec) => {
@@ -263,21 +262,33 @@ const IdeaAnalyzer = () => {
                     ></textarea>
                 </div>
 
-                {/* Funding */}
-                <div>
-                    <div className="flex justify-between mb-2">
-                        <label className="block text-sm font-semibold text-gray-300">Initial Funding</label>
-                        <span className="text-blue-400 font-bold">₹{formData.funding}.0L</span>
-                    </div>
-                    <input 
-                      type="range" 
-                      min="1" 
-                      max="1000" 
-                      value={formData.funding} 
-                      onChange={handleSliderChange} 
-                      className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500" 
-                    />
+              {/* Funding Input - Exact Amount */}
+              <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                     Initial Funding (in Rupees)
+                  </label>
+    
+                <div className="relative">
+                   {/* Rupee Symbol Icon */}
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-400 font-bold">₹</span>
+                  </div>
+
+                  <input 
+                      type="number" 
+                      name="funding"
+                      value={formData.funding}
+                      onChange={(e) => setFormData({ ...formData, funding: e.target.value })}
+                      placeholder="e.g. 50000"
+                      className="w-full pl-8 pr-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
                 </div>
+    
+                {/* Helper text to show them what they typed */}
+                <p className="text-xs text-gray-400 mt-2">
+                     You entered: <span className="text-blue-400 font-bold">₹{Number(formData.funding).toLocaleString('en-IN')}</span>
+                </p>
+              </div>
 
                 {/* Team & Market */}
                 <div className="grid md:grid-cols-2 gap-6">

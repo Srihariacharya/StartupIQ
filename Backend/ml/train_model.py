@@ -5,11 +5,8 @@ import joblib
 import os
 
 # 1. NAVIGATION LOGIC based on your image
-# Script is in: Backend/ml/train_model.py
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__)) 
 
-# Data is in: Backend/data/startup_data.csv
-# We go UP one level from 'ml' to 'Backend', then DOWN into 'data'
 DATA_PATH = os.path.join(SCRIPT_DIR, '..', 'data', 'startup_data.csv')
 
 # Model will be saved in: Backend/ml/models/startup_predictor.pkl

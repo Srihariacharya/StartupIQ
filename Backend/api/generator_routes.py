@@ -55,7 +55,7 @@ def generate_idea():
         print(f"📩 Request for: {topic}")
 
         if not api_key: 
-            print("⚠️ No API Key found. Using Fallback.")
+            print("No API Key found. Using Fallback.")
             time.sleep(1) # Fake delay
             return jsonify(get_fallback_ideas(topic)), 200
 
@@ -82,13 +82,12 @@ def generate_idea():
                     response_text = response.text
                     break
             except Exception as e:
-                print(f"⚠️ Model {m} failed: {e}")
+                print(f"Model {m} failed: {e}")
                 continue
 
         if not response_text:
-            print("⚠️ All AI models failed/limit reached. Using Fallback.")
-            # 🛡️ SAFETY NET: Return Smart Mock Data
-            time.sleep(1.5) # Fake delay to make it look real
+            print("All AI models failed/limit reached. Using Fallback.")
+            time.sleep(1.5) 
             return jsonify(get_fallback_ideas(topic)), 200
 
         # Parse AI Response
@@ -96,6 +95,6 @@ def generate_idea():
         return jsonify(json.loads(cleaned)), 200
 
     except Exception as e:
-        print(f"🔥 ERROR: {e}")
+        print(f"ERROR: {e}")
         # Final Safety Net
         return jsonify(get_fallback_ideas(topic)), 200
