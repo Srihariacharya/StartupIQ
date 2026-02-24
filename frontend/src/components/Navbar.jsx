@@ -13,7 +13,7 @@ const Navbar = () => {
           <div className="flex-shrink-0 flex items-center gap-2">
             <span className="text-2xl animate-pulse">🚀</span>
             <Link to="/" className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 hover:opacity-80 transition-opacity">
-              StartupIQ
+              Idea Generator
             </Link>
           </div>
 
@@ -23,7 +23,7 @@ const Navbar = () => {
               <NavLink to="/" current={location.pathname}>Home</NavLink>
               <NavLink to="/analyze" current={location.pathname}>Idea Analyzer</NavLink>
               <NavLink to="/generate" current={location.pathname}>Idea Gen</NavLink>
-              <NavLink to="/valuation" current={location.pathname}>Valuation</NavLink>
+              {/*<NavLink to="/valuation" current={location.pathname}>Valuation</NavLink>*/}
               <NavLink to="/talent" current={location.pathname}>Talent Scout</NavLink>
               <NavLink to="/market" current={location.pathname}>Market Trends</NavLink>
             </div>

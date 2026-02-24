@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; 
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+import { useNavigate } from 'react-router-dom';
 
 const IdeaGenerator = () => {
   const [keywords, setKeywords] = useState('');
   const [ideas, setIdeas] = useState([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleGenerate = async (e) => {
     e.preventDefault();
     if (!keywords) return alert("Please enter some keywords (e.g. AI, Health, Students)");
 
     setLoading(true);
-    setIdeas([]); 
+    setIdeas([]);
 
     try {
-      const res = await axios.post('http://127.0.0.1:5000/api/generate_idea', { 
-        topic: keywords 
+      const res = await axios.post(`${API_BASE}/api/generate_idea`, {
+        topic: keywords
       });
       setIdeas(res.data);
     } catch (err) {
@@ -28,12 +30,12 @@ const IdeaGenerator = () => {
   };
 
   const handleAnalyze = (idea) => {
-    navigate('/analyze', { 
-      state: { 
-        name: idea.name, 
+    navigate('/analyze', {
+      state: {
+        name: idea.name,
         solution: idea.solution,
-        industry: keywords 
-      } 
+        industry: keywords
+      }
     });
   };
 
@@ -49,14 +51,14 @@ const IdeaGenerator = () => {
 
         {/* Search Input */}
         <div className="flex gap-4 max-w-2xl mx-auto mb-10">
-          <input 
-            type="text" 
-            placeholder="Enter keywords (e.g. 'Blockchain for Farmers')" 
+          <input
+            type="text"
+            placeholder="Enter keywords (e.g. 'Blockchain for Farmers')"
             className="flex-grow p-4 rounded bg-gray-800 border border-gray-600 text-white focus:border-orange-500 outline-none"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
           />
-          <button 
+          <button
             onClick={handleGenerate}
             disabled={loading}
             className="bg-orange-600 hover:bg-orange-500 px-8 py-4 rounded font-bold transition-all shadow-lg shadow-orange-500/20"
@@ -70,28 +72,28 @@ const IdeaGenerator = () => {
           {ideas.map((idea, index) => (
             <div key={index} className="bg-gray-800 p-6 rounded-lg border border-gray-700 hover:border-orange-500 transition-all shadow-xl flex flex-col">
               <div className="text-4xl mb-4">🚀</div>
-              
+
               {/* Data Display */}
               <h3 className="text-xl font-bold text-white mb-2">{idea.name}</h3>
-              
+
               <div className="flex-grow space-y-3 mb-6">
                 <div>
-                    <span className="text-xs font-bold text-red-400 uppercase tracking-wide">The Problem</span>
-                    <p className="text-gray-400 text-sm leading-snug">{idea.problem}</p>
+                  <span className="text-xs font-bold text-red-400 uppercase tracking-wide">The Problem</span>
+                  <p className="text-gray-400 text-sm leading-snug">{idea.problem}</p>
                 </div>
                 <div>
-                    <span className="text-xs font-bold text-green-400 uppercase tracking-wide">The Solution</span>
-                    <p className="text-gray-300 text-sm leading-snug">{idea.solution}</p>
+                  <span className="text-xs font-bold text-green-400 uppercase tracking-wide">The Solution</span>
+                  <p className="text-gray-300 text-sm leading-snug">{idea.solution}</p>
                 </div>
               </div>
-              
+
               <div className="mt-auto">
                 <div className="bg-gray-900 p-3 rounded text-xs text-gray-300 border border-gray-700 mb-4">
-                    <span className="font-bold text-orange-400">Audience:</span> {idea.audience}
+                  <span className="font-bold text-orange-400">Audience:</span> {idea.audience}
                 </div>
 
                 {/* FIX 3: The Button to Analyze */}
-                <button 
+                <button
                   onClick={() => handleAnalyze(idea)}
                   className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-bold text-sm transition-colors shadow-lg shadow-blue-900/20"
                 >

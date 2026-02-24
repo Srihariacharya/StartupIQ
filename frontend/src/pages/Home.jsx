@@ -33,18 +33,18 @@ const Home = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center relative z-10">
           <div className="inline-block mb-4 px-4 py-1 rounded-full bg-blue-900/30 border border-blue-500/30 text-blue-300 text-sm font-semibold animate-bounce-slow">
-            AI-Powered Startup Intelligence
+            AI-Powered Idea Generator
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
-            Build Your Startup <br />
+            Build Your Idea <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
               With Data, Not Luck.
             </span>
           </h1>
           
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
-            StartupIQ uses advanced AI to validate your ideas, find the perfect co-founders, and analyze market trends in seconds.
+            Idea Generator uses advanced AI to validate your ideas, find the perfect co-founders, and analyze market trends in seconds.
           </p>
 
           <div className="flex justify-center gap-4">
@@ -85,7 +85,7 @@ const Home = () => {
             className="w-full md:w-[45%] lg:w-[30%]"
           />
 
-          {/* 3. Valuation Tool */}
+          {/* 3. Valuation Tool 
           <FeatureCard 
             title="Valuation Tool" 
             desc="Estimate your startup's pre-money valuation using industry data and ML models."
@@ -93,7 +93,7 @@ const Home = () => {
             link="/valuation"
             color="emerald"
             className="w-full md:w-[45%] lg:w-[30%]"
-          />
+          /> */}
 
           {/* 4. Talent Scout */}
           <FeatureCard 
@@ -120,7 +120,7 @@ const Home = () => {
 
       {/* --- FOOTER --- */}
       <footer className="border-t border-gray-800 py-8 text-center text-gray-500 text-sm">
-        <p>© 2025 StartupIQ. Built for Major Project.</p>
+        <p>© 2025 Idea Generator. Built for Major Project.</p>
       </footer>
 
     </div>

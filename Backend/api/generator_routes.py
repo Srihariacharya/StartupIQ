@@ -1,45 +1,46 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
-import google.generativeai as genai
+from google import genai  # Updated library
 import os
 import json
 import time
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv(override=True)
 
 generator_bp = Blueprint('generator', __name__)
 
+# 1. Initialize Client (New SDK)
 api_key = os.getenv("GEMINI_API_KEY")
+client = None
 if api_key:
-    genai.configure(api_key=api_key)
+    client = genai.Client(api_key=api_key)
+
+# Using the high-limit lite model for 2026
+MODEL_ID = "gemini-2.5-flash-lite"
 
 # --- 🧠 SMART FALLBACK LOGIC ---
 def get_fallback_ideas(topic):
-    """
-    Generates 'fake' but relevant ideas by injecting the 
-    user's topic into generic templates.
-    """
-    # Capitalize for better looking titles
-    clean_topic = topic.title() 
-    
+    """Generates relevant ideas if the AI fails or quota is hit."""
+    clean_topic = topic.title() if topic else "Startup"
     return [
         {
-            "name": f"Smart {clean_topic} Logistics Hub (Physical)",
-            "problem": f"The current supply chain for {topic} is fragmented, leading to high storage costs and slow delivery times.",
-            "solution": f"A decentralized network of micro-warehouses specifically designed for {topic}, utilizing automated inventory tracking.",
-            "audience": f"{clean_topic} Manufacturers & Distributors"
+            "name": f"Smart {clean_topic} Logistics Hub",
+            "problem": f"The current supply chain for {clean_topic} is fragmented.",
+            "solution": f"A decentralized network of micro-warehouses for {clean_topic}.",
+            "audience": f"{clean_topic} Manufacturers"
         },
         {
-            "name": f"{clean_topic}-as-a-Service (Business Model)",
-            "problem": f"High upfront costs prevent smaller companies from accessing premium {topic} equipment/services.",
-            "solution": f"A pay-per-use subscription model allowing businesses to rent high-end {topic} infrastructure without capital expenditure.",
-            "audience": f"Startups & SMEs in {clean_topic}"
+            "name": f"{clean_topic}-as-a-Service",
+            "problem": f"High upfront costs prevent access to {clean_topic} services.",
+            "solution": f"A subscription model for {clean_topic} infrastructure.",
+            "audience": f"Startups in {clean_topic}"
         },
         {
-            "name": f"AI-Powered {clean_topic} Optimizer (Tech)",
-            "problem": f"Inefficiencies in tracking and predicting demand cause massive waste in the {topic} sector.",
-            "solution": f"An AI-driven platform that predicts market demand shifts for {topic} using real-time global data analytics.",
+            "name": f"AI-Powered {clean_topic} Optimizer",
+            "problem": f"Inefficiencies in demand prediction in the {clean_topic} sector.",
+            "solution": f"An AI platform that predicts market demand for {clean_topic}.",
             "audience": f"{clean_topic} Operations Managers"
         }
     ]
@@ -47,54 +48,65 @@ def get_fallback_ideas(topic):
 @generator_bp.route('/generate_idea', methods=['POST', 'OPTIONS'])
 @cross_origin()
 def generate_idea():
-    if request.method == 'OPTIONS': return jsonify({'status': 'ok'}), 200
+    if request.method == 'OPTIONS': 
+        return jsonify({'status': 'ok'}), 200
 
     try:
         data = request.get_json()
         topic = data.get('topic', 'Startup')
-        print(f"📩 Request for: {topic}")
+        print(f"📩 Request for Idea Generation: {topic}")
 
-        if not api_key: 
-            print("No API Key found. Using Fallback.")
-            time.sleep(1) # Fake delay
+        # 2. Check for Client/API Key
+        if not client:
+            print("❌ No API Client initialized. Using Fallback.")
             return jsonify(get_fallback_ideas(topic)), 200
 
-        # Prompt asking for 3 categories
+        # 3. Construct the Prompt (Asking for JSON Schema)
         prompt = f"""
-        I am looking for innovative startup ideas in the "{topic}" industry.
-        Generate exactly 3 distinct ideas:
+        Act as a startup consultant. Generate exactly 3 innovative startup ideas in the "{topic}" industry.
+        
+        Categories:
         1. Hard-Tech/Physical Idea.
         2. Business Model Innovation.
         3. Tech-Enabled Solution.
-        
-        Return JSON array: [{{"name": "...", "problem": "...", "solution": "...", "audience": "..."}}]
+
+        Return ONLY a valid JSON array of objects.
+        Format:
+        [
+            {{"name": "Idea Name", "problem": "Statement", "solution": "Description", "audience": "Target"}}
+        ]
         """
 
-        # Try API
-        models = ['gemini-1.5-flash', 'gemini-pro']
-        response_text = None
-        
-        for m in models:
-            try:
-                model = genai.GenerativeModel(m)
-                response = model.generate_content(prompt)
-                if response.text:
-                    response_text = response.text
-                    break
-            except Exception as e:
-                print(f"Model {m} failed: {e}")
-                continue
+        print(f"⚡ ACTIVATING MODEL: {MODEL_ID} ⚡")
 
-        if not response_text:
-            print("All AI models failed/limit reached. Using Fallback.")
-            time.sleep(1.5) 
+        # 4. Call Gemini 2.5 Flash-Lite
+        try:
+            # Using new generate_content syntax
+            response = client.models.generate_content(
+                model=MODEL_ID,
+                contents=prompt
+            )
+            
+            if not response.text:
+                raise ValueError("Empty response from AI")
+
+            response_text = response.text
+
+        except Exception as e:
+            print(f"⚠️ AI Model Failed: {e}")
             return jsonify(get_fallback_ideas(topic)), 200
 
-        # Parse AI Response
-        cleaned = response_text.replace("```json", "").replace("```", "").strip()
-        return jsonify(json.loads(cleaned)), 200
+        # 5. Clean and Parse Response
+        # Removing potential markdown blocks if AI includes them
+        cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
+        
+        try:
+            ideas_json = json.loads(cleaned_text)
+            return jsonify(ideas_json), 200
+        except json.JSONDecodeError:
+            print("⚠️ Failed to parse AI JSON. Using Fallback.")
+            return jsonify(get_fallback_ideas(topic)), 200
 
     except Exception as e:
-        print(f"ERROR: {e}")
-        # Final Safety Net
-        return jsonify(get_fallback_ideas(topic)), 200
+        print(f"🔥 Critical Error: {e}")
+        return jsonify(get_fallback_ideas(topic if 'topic' in locals() else 'Startup')), 200

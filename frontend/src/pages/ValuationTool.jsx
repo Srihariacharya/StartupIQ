@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { IndianRupee, TrendingUp, Users, Calculator, Activity, Sparkles } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
 const ValuationTool = () => {
   const [industry, setIndustry] = useState('');
   const [revenue, setRevenue] = useState('');
@@ -16,7 +18,7 @@ const ValuationTool = () => {
     if (!industry) return alert("Please enter an Industry first (e.g. EdTech)");
     setEstimating(true);
     try {
-      const res = await axios.post('http://127.0.0.1:5000/api/estimate_metrics', { industry });
+      const res = await axios.post(`${API_BASE}/api/estimate_metrics`, { industry });
       setRevenue(res.data.revenue);
       setGrowth(res.data.growth);
       setUsers(res.data.users);
@@ -30,7 +32,7 @@ const ValuationTool = () => {
     if (!revenue || !growth) return alert("Please enter Revenue and Growth metrics.");
     setLoading(true);
     try {
-      const res = await axios.post('http://127.0.0.1:5000/api/predict_valuation', {
+      const res = await axios.post(`${API_BASE}/api/predict_valuation`, {
         revenue: Number(revenue),
         growth: Number(growth),
         users: Number(users || 0)

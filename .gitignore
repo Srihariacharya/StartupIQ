@@ -1,7 +1,7 @@
 # Python
-backend/venv/
-backend/__pycache__/
-backend/.env
+Backend/venv/
+Backend/__pycache__/
+Backend/.env
 
 # Node.js
 frontend/node_modules/
@@ -10,5 +10,5 @@ frontend/.env
 
 *.pkl
 *.csv
-backend/ml/models/
-backend/data/
+Backend/ml/models/
+Backend/data/

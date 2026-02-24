@@ -1,145 +1,124 @@
 from flask import Blueprint, request, jsonify
-import requests
+from google import genai
+from google.api_core.exceptions import ResourceExhausted
 import os
 import json
-import joblib
-import pandas as pd
+import re
+import time
 from dotenv import load_dotenv
+from database.db import db
+from database.models import StartupAnalysis
 
 load_dotenv(override=True)
 analyzer_bp = Blueprint('analyzer', __name__)
 
-# --- PRECISE ABSOLUTE PATHING ---
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH = os.path.join(BASE_DIR, '..', 'data', 'startup_data.csv')
-MODEL_PATH = os.path.join(BASE_DIR, '..', 'ml', 'models', 'startup_predictor.pkl')
-
-print(f"CSV PATH: {os.path.abspath(CSV_PATH)}")
-print(f"MODEL PATH: {os.path.abspath(MODEL_PATH)}")
-
-def get_ml_score(data):
-    try:
-        if not os.path.exists(MODEL_PATH):
-            print(f"Model not found at {MODEL_PATH}")
-            return 50
-        
-        artifacts = joblib.load(MODEL_PATH)
-        model = artifacts['model']
-        le_sector = artifacts.get('le_sector')
-        le_market = artifacts.get('le_market')
-
-        team_size_map = { "Solo Founder": 1, "2-4 Employees": 3, "5-10 Employees": 7, "10+ Employees": 15 }
-        raw_team_text = data.get('teamSize', 'Solo Founder').strip()
-        numeric_team_size = team_size_map.get(raw_team_text, 1)
-
-        try:
-            sector_encoded = le_sector.transform([data.get('industry', 'Other')])[0]
-            market_encoded = le_market.transform([data.get('marketSize', 'Regional')])[0]
-        except:
-            sector_encoded, market_encoded = 0, 0
-        
-        # --- FIX: Convert Rupees to Lakhs ---
-        # User sends: 50000 (Rupees)
-        # Model needs: 0.5 (Lakhs)
-        raw_funding = float(data.get('funding', 0))
-        funding_in_lakhs = raw_funding / 100000.0
-        # ------------------------------------
-
-        input_df = pd.DataFrame([[
-            funding_in_lakhs, numeric_team_size,
-            sector_encoded, market_encoded, 1 
-        ]], columns=['Funding', 'TeamSize', 'Sector', 'MarketSize', 'Competition'])
-
-        return int(model.predict_proba(input_df)[0][1] * 100)
-    except Exception as e:
-        print(f"❌ ML Error: {e}")
-        return 45
+# --- CONFIG ---
+api_key = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=api_key) if api_key else None
+MODEL_ID = "gemini-2.5-flash-lite"
 
 @analyzer_bp.route('/analyze', methods=['POST', 'OPTIONS'])
 def analyze_startup():
-    if request.method == 'OPTIONS': 
-        return jsonify({'status': 'ok'}), 200
+    if request.method == 'OPTIONS': return jsonify({'status': 'ok'}), 200
     try:
         data = request.get_json()
-        startup_name = data.get('startupName', '').strip()
         
-        final_score = None
-        source = "Random Forest Model (Trained)"
-        
-        # 1. ROBUST CSV CHECK
-        if os.path.exists(CSV_PATH):
-            try:
-                df = pd.read_csv(CSV_PATH)
-                
-                # ---  Clean Headers AND Data ---
-                df.columns = df.columns.str.strip() # Clean headers
-                if 'StartupName' in df.columns:
-                    # Clean the actual names in the rows (remove hidden spaces)
-                    df['StartupName'] = df['StartupName'].astype(str).str.strip()
-                    
-                    match = df[df['StartupName'].str.lower() == startup_name.lower()]
-                    
-                    if not match.empty:
-                        if 'SuccessProb' in df.columns:
-                            final_score = int(match.iloc[0]['SuccessProb'])
-                        elif 'Outcome' in df.columns:
-                            final_score = int(match.iloc[0]['Outcome'] * 100)
-                        source = "Local Dataset (Exact Match)"
-                else:
-                    print(" ERROR: 'StartupName' column missing from CSV!")
-
-            except Exception as csv_err:
-                print(f"CSV Read Error: {csv_err}")
-
-        # 2. Fallback to ML
-        if final_score is None:
-            # print(f"Startup '{startup_name}' not found in CSV. Using ML Model.")
-            final_score = get_ml_score(data)
-
-        # 3. Gemini Analysis with FALLBACK
-        api_key = os.getenv("GEMINI_API_KEY")
-        
-        # Updated prompt to handle the Rupee format in text
+        # 1. Extract Data
+        startup_name = data.get('startupName', 'Startup')
         raw_funding = float(data.get('funding', 0))
+        market = data.get('marketSize', 'Regional')
+        team = data.get('teamSize', 'Solo Founder')
+        
         formatted_funding = f"₹{raw_funding:,.0f}"
 
+        # 2. CONSTRUCT THE "VC JUDGE" PROMPT
+        # We give the AI the rubric so it calculates the score itself.
         prompt = f"""
-        Act as a Venture Capital Analyst. Analyze '{startup_name}' (Score: {final_score}/100).
-        Funding: {formatted_funding}.
-        Return JSON: {{ "analysis": "2 sentences", "recommendations": ["Tip 1", "Tip 2", "Tip 3"] }}
-        """
+        Act as a strict Venture Capitalist. Evaluate this startup:
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={api_key}"
-        # Safe fallback for API call
-        try:
-            response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
-            response_data = response.json() if response.status_code == 200 else {}
-        except:
-            response_data = {}
+        Name: {startup_name}
+        Funding: {formatted_funding}
+        Market Scope: {market}
+        Team Size: {team}
 
-        ai_analysis = "AI analysis unavailable at the moment."
-        ai_recs = ["Focus on MVP", "Validate market fit", "Optimize cash burn"]
+        SCORING RUBRIC (0-100%):
+        - 0-20%: Pocket money (< ₹10k) or hobby projects.
+        - 21-50%: Early stage, low funding (< ₹2L), or risky global goals with small team.
+        - 51-75%: Good regional potential, decent funding (> ₹2L), solo or small team.
+        - 76-95%: High funding (> ₹10L), strong team, or high-growth market fit.
 
-        if response_data:
-            try:
-                gen_text = response_data['candidates'][0]['content']['parts'][0]['text']
-                
-                clean_text = gen_text.replace("```json", "").replace("```", "").strip()
-                ai_content = json.loads(clean_text)
-                ai_analysis = ai_content.get('analysis', ai_analysis)
-                ai_recs = ai_content.get('recommendations', ai_recs)
-            except Exception as parse_err:
-                print(f"JSON Parse Error: {parse_err}")
+        TASK:
+        1. Calculate a "Success Score" based on the rubric above.
+        2. Write a 2-sentence analysis.
+        3. Provide 3 specific recommendations.
 
-        # --- ALWAYS RETURN A RESPONSE ---
-        return jsonify({
+        RETURN JSON ONLY:
+        {{
+            "score": integer,
+            "analysis": "string",
+            "recommendations": ["string", "string", "string"]
+        }}
+        """
+
+        # 3. CALL GEMINI API
+        ai_data = {}
+        # Default Fallback if API fails
+        fallback_score = 10 if raw_funding < 10000 else 50 
+        
+        if client:
+            for attempt in range(2): # Retry logic
+                try:
+                    response = client.models.generate_content(model=MODEL_ID, contents=prompt)
+                    # Extract JSON from response
+                    match = re.search(r'\{.*\}', response.text, re.DOTALL)
+                    if match:
+                        ai_data = json.loads(match.group())
+                        break 
+                except ResourceExhausted:
+                    print("⚠️ Quota hit, retrying...")
+                    time.sleep(2)
+                except Exception as e:
+                    print(f"⚠️ AI Error: {e}")
+                    break
+
+        # 4. EXTRACT & VALIDATE SCORE (The "Python Veto")
+        # We take the AI's score, but we double-check it with hard logic.
+        final_score = ai_data.get('score', fallback_score)
+        
+        # VETO 1: The "Pocket Money" Rule
+        if raw_funding < 5000:
+            final_score = min(final_score, 15) # AI cannot give >15% for <5k
+            ai_data['analysis'] = f"Funding of {formatted_funding} is too low for business operations."
+
+        # VETO 2: The "Unrealistic Global" Rule
+        elif market == "Global" and raw_funding < 500000:
+            final_score = min(final_score, 35) # Cap at 35% if global but poor
+
+        # VETO 3: The "Solid Regional" Boost
+        elif market == "Regional" and raw_funding > 100000:
+            final_score = max(final_score, 60) # Ensure at least 60%
+
+        # 5. PREPARE RESPONSE
+        final_result = {
             "score": final_score,
-            "analysis": ai_analysis,
-            "recommendations": ai_recs,
-            "source": source
-        }), 200
-            
-    except Exception as e:
-        print(f"Backend Critical Error: {e}")
+            "analysis": ai_data.get('analysis', "Could not generate analysis."),
+            "recommendations": ai_data.get('recommendations', ["Secure funding", "Build MVP"])
+        }
 
+        # 6. SAVE TO DATABASE
+        try:
+            new_entry = StartupAnalysis(
+                startup_name=startup_name,
+                funding=raw_funding,
+                market_size=market,
+                ai_result=final_result
+            )
+            db.session.add(new_entry)
+            db.session.commit()
+        except Exception as e:
+            print(f"⚠️ DB Save Error: {e}")
+
+        return jsonify(final_result), 200
+
+    except Exception as e:
         return jsonify({"error": str(e)}), 500

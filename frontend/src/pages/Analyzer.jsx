@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 import AnalyzerForm from '../components/AnalyzerForm';
 import ResultsDashboard from '../components/ResultsDashboard';
 
@@ -15,7 +17,7 @@ const Analyzer = () => {
 
     try {
       // Connect to your Flask Backend
-      const response = await axios.post('http://127.0.0.1:5000/api/analyze', formData);
+      const response = await axios.post(`${API_BASE}/api/analyze`, formData);
       setResult(response.data);
     } catch (err) {
       console.error(err);
