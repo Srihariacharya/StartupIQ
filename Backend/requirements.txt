@@ -10,4 +10,5 @@ shap
 requests
 gunicorn
 google-genai
+google-api-core
 psycopg2-binary
