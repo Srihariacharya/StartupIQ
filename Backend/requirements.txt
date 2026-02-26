@@ -1,5 +1,6 @@
 Flask
 flask-cors
+flask-sqlalchemy
 python-dotenv
 pymongo
 pandas
@@ -9,3 +10,4 @@ shap
 requests
 gunicorn
 google-generativeai
+psycopg2-binary
