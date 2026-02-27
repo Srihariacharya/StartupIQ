@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useUsageLimit } from '../hooks/useUsageLimit';
+import LimitModal from '../components/LimitModal';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
-import { useNavigate } from 'react-router-dom';
 
 const IdeaGenerator = () => {
   const [keywords, setKeywords] = useState('');
@@ -10,9 +12,15 @@ const IdeaGenerator = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const { checkAndIncrementUsage, showLimitModal, closeLimitModal } = useUsageLimit();
+
   const handleGenerate = async (e) => {
     e.preventDefault();
     if (!keywords) return alert("Please enter some keywords (e.g. AI, Health, Students)");
+
+    if (!checkAndIncrementUsage()) {
+      return;
+    }
 
     setLoading(true);
     setIdeas([]);
@@ -112,6 +120,7 @@ const IdeaGenerator = () => {
         )}
 
       </div>
+      <LimitModal isOpen={showLimitModal} onClose={closeLimitModal} />
     </div>
   );
 };

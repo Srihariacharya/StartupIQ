@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
+import {
+  Building2,
+  Target,
+  Lightbulb,
+  Banknote,
+  Send,
+  AlertCircle,
+  Sparkles,
+  Info,
+  FileText,
+  Download
+} from 'lucide-react';
+
+import { useUsageLimit } from '../hooks/useUsageLimit';
+import LimitModal from '../components/LimitModal';
+import jsPDF from 'jspdf';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
-import { useLocation } from 'react-router-dom';
-import { Sparkles, Info, FileText, Download } from 'lucide-react';
-import jsPDF from 'jspdf';
 
 const IdeaAnalyzer = () => {
   const location = useLocation();
@@ -23,6 +37,9 @@ const IdeaAnalyzer = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Usage tracking
+  const { checkAndIncrementUsage, showLimitModal, closeLimitModal } = useUsageLimit();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -32,9 +49,19 @@ const IdeaAnalyzer = () => {
     setFormData({ ...formData, funding: e.target.value });
   };
 
-  const handleSubmit = async () => {
+  const handleAnalyze = async (e) => {
+    e.preventDefault(); // Prevent default form submission behavior
+    if (!formData.startupName || !formData.description) {
+      setError("Startup Name & Description are required.");
+      return;
+    }
+
+    if (!checkAndIncrementUsage()) {
+      return;
+    }
+
     setLoading(true);
-    setError('');
+    setError(null); // Clear previous errors
     setResult(null);
 
     try {
@@ -79,7 +106,7 @@ const IdeaAnalyzer = () => {
       doc.setTextColor(255, 255, 255);
       doc.text("Startup Feasibility Report", margin, 20);
       doc.setFontSize(12);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, margin, 32);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()} `, margin, 32);
 
       let yPos = 60;
 
@@ -91,9 +118,9 @@ const IdeaAnalyzer = () => {
 
       doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
-      doc.text(`Name: ${formData.startupName || "My Startup"}`, margin, yPos);
+      doc.text(`Name: ${formData.startupName || "My Startup"} `, margin, yPos);
       yPos += 8;
-      doc.text(`Industry: ${formData.industry || "General"}`, margin, yPos);
+      doc.text(`Industry: ${formData.industry || "General"} `, margin, yPos);
       yPos += 12;
 
       yPos = addWrappedText(formData.description, yPos, 12, [60, 60, 60]);
@@ -108,9 +135,9 @@ const IdeaAnalyzer = () => {
       doc.setTextColor(0);
       doc.text(`Initial Funding: ${formData.funding || 0} Lakhs`, margin, yPos);
       yPos += 8;
-      doc.text(`Team Size: ${formData.teamSize || "N/A"}`, margin, yPos);
+      doc.text(`Team Size: ${formData.teamSize || "N/A"} `, margin, yPos);
       yPos += 8;
-      doc.text(`Target Market: ${formData.marketSize || "N/A"}`, margin, yPos);
+      doc.text(`Target Market: ${formData.marketSize || "N/A"} `, margin, yPos);
       yPos += 15;
 
       // Section 3: AI Verdict
@@ -133,7 +160,7 @@ const IdeaAnalyzer = () => {
       else if (score > 40) doc.setTextColor(243, 156, 18);
       else doc.setTextColor(192, 57, 43);
 
-      doc.text(`Success Probability: ${score}%`, margin + 10, yPos + 15);
+      doc.text(`Success Probability: ${score}% `, margin + 10, yPos + 15);
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text("(Based on historical data & AI analysis)", margin + 10, yPos + 25);
@@ -172,7 +199,7 @@ const IdeaAnalyzer = () => {
           let text = "";
           if (typeof rec === 'object') {
             // Handle object format {title: "...", content: "..."}
-            text = `${rec.title || "Insight"}: ${rec.tip || rec.content || ""}`;
+            text = `${rec.title || "Insight"}: ${rec.tip || rec.content || ""} `;
           } else {
             // Handle simple string format
             text = String(rec);
@@ -186,7 +213,7 @@ const IdeaAnalyzer = () => {
       }
 
       console.log("Saving PDF...");
-      doc.save(`${formData.startupName || "Startup"}_Feasibility_Report.pdf`);
+      doc.save(`${formData.startupName || "Startup"} _Feasibility_Report.pdf`);
 
     } catch (err) {
       console.error("PDF GENERATION ERROR:", err);
@@ -324,7 +351,7 @@ const IdeaAnalyzer = () => {
             </div>
 
             <button
-              onClick={handleSubmit}
+              onClick={handleAnalyze}
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -353,8 +380,8 @@ const IdeaAnalyzer = () => {
                     Analysis Source
                   </span>
                   <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${result.source?.includes('Dataset')
-                      ? 'bg-emerald-900/20 border-emerald-500/50 text-emerald-400'
-                      : 'bg-blue-900/20 border-blue-500/50 text-blue-400'
+                    ? 'bg-emerald-900/20 border-emerald-500/50 text-emerald-400'
+                    : 'bg-blue-900/20 border-blue-500/50 text-blue-400'
                     }`}>
                     {result.source || "Hybrid AI Engine"}
                   </span>
@@ -404,6 +431,10 @@ const IdeaAnalyzer = () => {
           </div>
         )}
       </div>
+      {/* Optional: Add a limit indicator in the UI if not logged in */}
+
+      {/* Limit Modal */}
+      <LimitModal isOpen={showLimitModal} onClose={closeLimitModal} />
     </div>
   );
 };

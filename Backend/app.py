@@ -5,7 +5,7 @@ import os
 
 # --- 1. NEW DATABASE IMPORTS ---
 from database.db import db
-from database.models import StartupAnalysis # Importing this ensures the table is created!
+from database.models import StartupAnalysis, User # Importing this ensures the table is created!
 
 # --- 2. BLUEPRINT IMPORTS ---
 from api.analyzer_routes import analyzer_bp
@@ -13,6 +13,7 @@ from api.generator_routes import generator_bp
 from api.talent_routes import talent_bp
 from api.market_routes import market_bp
 from api.valuation_routes import valuation_bp
+from api.auth_routes import auth_bp
 
 # Load environment variables
 load_dotenv(override=True)
@@ -27,6 +28,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 # In production, this will read your PostgreSQL URL from the .env file
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///startup_iq.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'startup_iq_dev_secret_key_must_be_changed_in_prod')
 
 # Initialize the DB with the app
 db.init_app(app)
@@ -35,9 +37,9 @@ db.init_app(app)
 with app.app_context():
     try:
         db.create_all()
-        print("✅ SQL Database connected & tables created.")
+        print("SQL Database connected & tables created.")
     except Exception as e:
-        print(f"❌ Database error: {e}")
+        print(f"Database error: {e}")
 
 # --- 5. REGISTER BLUEPRINTS ---
 app.register_blueprint(analyzer_bp, url_prefix='/api')
@@ -45,6 +47,7 @@ app.register_blueprint(generator_bp, url_prefix='/api')
 app.register_blueprint(talent_bp, url_prefix='/api')
 app.register_blueprint(market_bp, url_prefix='/api')
 app.register_blueprint(valuation_bp, url_prefix='/api')
+app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
 # --- 6. HEALTH CHECK ---
 @app.route('/')

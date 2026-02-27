@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useUsageLimit } from '../hooks/useUsageLimit';
+import LimitModal from '../components/LimitModal';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 import { useNavigate } from 'react-router-dom';
@@ -8,8 +10,7 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import {
-  TrendingUp, Zap, Database, Shield,
-  BookOpen, ArrowRight, Rocket
+  TrendingUp, Map, Globe2, AlertCircle, Database, Zap, Shield, BookOpen, Rocket
 } from 'lucide-react';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28BF2'];
@@ -26,6 +27,8 @@ const MarketHeatmap = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const { checkAndIncrementUsage, showLimitModal, closeLimitModal } = useUsageLimit();
 
   // --- NEW: SMART DATA CLEANER ---
   const processSentimentData = (raw_data) => {
@@ -214,6 +217,8 @@ const MarketHeatmap = () => {
           </div>
         )}
       </div>
+
+      <LimitModal isOpen={showLimitModal} onClose={closeLimitModal} />
     </div>
   );
 };

@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import {
+  Search,
+  Users,
+  Github,
+  MapPin,
+  Briefcase,
+  Star,
+  ExternalLink
+} from 'lucide-react';
+import { useUsageLimit } from '../hooks/useUsageLimit';
+import LimitModal from '../components/LimitModal';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
@@ -7,9 +18,17 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 const CandidateCard = ({ person, mySkills }) => {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const { checkAndIncrementUsage, showLimitModal, closeLimitModal } = useUsageLimit();
 
   const checkFit = async () => {
     if (!mySkills) return alert("Please enter YOUR skills first in the top box!");
+
+    if (!checkAndIncrementUsage()) {
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await axios.post(`${API_BASE}/api/analyze_fit`, {
