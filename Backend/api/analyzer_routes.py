@@ -1,13 +1,14 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from google import genai
 from google.api_core.exceptions import ResourceExhausted
 import os
 import json
 import re
 import time
+import jwt
 from dotenv import load_dotenv
 from database.db import db
-from database.models import StartupAnalysis
+from database.models import StartupAnalysis, User
 
 load_dotenv(override=True)
 analyzer_bp = Blueprint('analyzer', __name__)
@@ -75,10 +76,10 @@ def analyze_startup():
                         ai_data = json.loads(match.group())
                         break 
                 except ResourceExhausted:
-                    print("⚠️ Quota hit, retrying...")
+                    print("[WARN] Quota hit, retrying...")
                     time.sleep(2)
                 except Exception as e:
-                    print(f"⚠️ AI Error: {e}")
+                    print(f"[WARN] AI Error: {e}")
                     break
 
         # 4. EXTRACT & VALIDATE SCORE (The "Python Veto")
@@ -105,18 +106,34 @@ def analyze_startup():
             "recommendations": ai_data.get('recommendations', ["Secure funding", "Build MVP"])
         }
 
-        # 6. SAVE TO DATABASE
+        # 6. SAVE TO DATABASE (with optional user linkage)
         try:
+            # Try to extract user_id from JWT if user is logged in
+            user_id = None
+            auth_header = request.headers.get('Authorization', '')
+            if auth_header.startswith('Bearer '):
+                try:
+                    token = auth_header.split(' ')[1]
+                    secret = current_app.config.get('SECRET_KEY', 'startup_iq_super_secret_key_123')
+                    data_decoded = jwt.decode(token, secret, algorithms=["HS256"])
+                    user_id = data_decoded.get('user_id')
+                except:
+                    pass  # Anonymous user, that's fine
+
             new_entry = StartupAnalysis(
                 startup_name=startup_name,
                 funding=raw_funding,
                 market_size=market,
-                ai_result=final_result
+                ai_result=final_result,
+                user_id=user_id
             )
             db.session.add(new_entry)
             db.session.commit()
+
+            # Include the analysis ID in response (for sharing)
+            final_result['analysis_id'] = new_entry.id
         except Exception as e:
-            print(f"⚠️ DB Save Error: {e}")
+            print(f"[WARN] DB Save Error: {e}")
 
         return jsonify(final_result), 200
 

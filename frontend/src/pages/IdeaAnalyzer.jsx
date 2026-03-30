@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import {
@@ -11,18 +11,30 @@ import {
   Sparkles,
   Info,
   FileText,
-  Download
+  Download,
+  Share2,
+  Link as LinkIcon
 } from 'lucide-react';
+import { Doughnut } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
+import { AuthContext } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { useUsageLimit } from '../hooks/useUsageLimit';
 import LimitModal from '../components/LimitModal';
 import jsPDF from 'jspdf';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 const IdeaAnalyzer = () => {
   const location = useLocation();
   const incomingData = location.state || {};
+  const { token } = useContext(AuthContext);
+  const { t } = useLanguage();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     startupName: incomingData.name || '',
@@ -36,6 +48,7 @@ const IdeaAnalyzer = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [sharing, setSharing] = useState(false);
 
   // Usage tracking
   const { checkAndIncrementUsage, showLimitModal, closeLimitModal } = useUsageLimit();
@@ -65,13 +78,41 @@ const IdeaAnalyzer = () => {
     setResult(null);
 
     try {
-      const response = await axios.post(`${API_BASE}/api/analyze`, formData);
+      const headers = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const response = await axios.post(`${API_BASE}/api/analyze`, formData, { headers });
       setResult(response.data);
+      showToast('Analysis complete!', 'success');
     } catch (err) {
       console.error(err);
       setError("CORS or Connection Error. Ensure Backend is running on port 5000.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // --- SHARE FUNCTIONALITY ---
+  const handleShare = async () => {
+    if (!result?.analysis_id || !token) {
+      showToast('Please login to share reports', 'info');
+      return;
+    }
+    setSharing(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/share/${result.analysis_id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.share_id) {
+        const shareUrl = `${window.location.origin}/shared/${data.share_id}`;
+        await navigator.clipboard.writeText(shareUrl);
+        showToast(t('analyzer.linkCopied'), 'success');
+      }
+    } catch (err) {
+      showToast('Failed to create share link', 'error');
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -364,20 +405,44 @@ const IdeaAnalyzer = () => {
 
         {/* RESULTS SECTION */}
         {result && (
-          <div className="bg-gray-800 text-white rounded-2xl shadow-2xl p-8 border border-emerald-500/30 animate-in fade-in slide-in-from-bottom-4">
+          <div className="bg-gray-800 text-white rounded-2xl shadow-2xl p-8 border border-emerald-500/30 animate-fade-in-up">
             <div className="flex flex-col md:flex-row items-center justify-between gap-8">
 
-              {/* Score Circle & Source Badge */}
+              {/* Interactive Doughnut Chart */}
               <div className="text-center">
-                <div className={`w-32 h-32 rounded-full border-8 flex items-center justify-center text-4xl font-bold shadow-[0_0_20px_rgba(0,0,0,0.3)] bg-gray-900 ${result.score > 70 ? 'border-emerald-500 text-emerald-400 shadow-emerald-900/40' : result.score > 40 ? 'border-yellow-500 text-yellow-400 shadow-yellow-900/40' : 'border-red-500 text-red-400 shadow-red-900/40'}`}>
-                  {result.score}%
+                <div className="w-40 h-40 mx-auto mb-2">
+                  <Doughnut
+                    data={{
+                      labels: ['Score', 'Remaining'],
+                      datasets: [{
+                        data: [result.score, 100 - result.score],
+                        backgroundColor: [
+                          result.score > 70 ? '#10b981' : result.score > 40 ? '#f59e0b' : '#ef4444',
+                          '#1f2937'
+                        ],
+                        borderWidth: 0,
+                        cutout: '75%',
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: true,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                      }
+                    }}
+                  />
                 </div>
-                <p className="mt-2 text-gray-400 font-semibold tracking-wider uppercase text-sm mb-4">Probability</p>
+                <p className="text-3xl font-bold mt-[-80px] mb-[50px]" style={{color: result.score > 70 ? '#10b981' : result.score > 40 ? '#f59e0b' : '#ef4444'}}>
+                  {result.score}%
+                </p>
+                <p className="text-gray-400 font-semibold tracking-wider uppercase text-sm mb-4">{t('analyzer.probability')}</p>
 
                 {/* Source Badge */}
                 <div className="flex flex-col items-center gap-1">
                   <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">
-                    Analysis Source
+                    {t('analyzer.analysisSource')}
                   </span>
                   <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${result.source?.includes('Dataset')
                     ? 'bg-emerald-900/20 border-emerald-500/50 text-emerald-400'
@@ -390,12 +455,12 @@ const IdeaAnalyzer = () => {
 
               {/* Text Analysis */}
               <div className="flex-1 w-full">
-                <h3 className="text-2xl font-bold mb-2 text-white">AI Verdict</h3>
+                <h3 className="text-2xl font-bold mb-2 text-white">{t('analyzer.aiVerdict')}</h3>
                 <p className="text-gray-300 mb-6 text-lg leading-relaxed">{result.analysis}</p>
 
                 <div className="bg-gray-700/50 p-5 rounded-lg border-l-4 border-blue-500 mb-6">
                   <h4 className="font-bold text-blue-400 mb-3 flex items-center gap-2">
-                    <Info size={18} /> Strategic Advice
+                    <Info size={18} /> {t('analyzer.strategicAdvice')}
                   </h4>
                   <ul className="space-y-4">
                     {result.recommendations && result.recommendations.map((rec, index) => (
@@ -417,13 +482,20 @@ const IdeaAnalyzer = () => {
                   </ul>
                 </div>
 
-                {/* 👇 NEW DOWNLOAD BUTTON 👇 */}
-                <div className="flex justify-start">
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3">
                   <button
                     onClick={downloadReport}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-900/20"
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-900/20"
                   >
-                    <FileText size={18} /> Download Feasibility Report (PDF) <Download size={18} />
+                    <FileText size={18} /> {t('analyzer.downloadReport')} <Download size={18} />
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    disabled={sharing}
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50"
+                  >
+                    <Share2 size={18} /> {sharing ? '...' : t('analyzer.shareReport')}
                   </button>
                 </div>
               </div>

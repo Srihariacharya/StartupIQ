@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 const FeatureCard = ({ title, desc, icon, link, color, className = "" }) => (
   <Link 
@@ -23,6 +24,8 @@ const FeatureCard = ({ title, desc, icon, link, color, className = "" }) => (
 );
 
 const Home = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-gray-900 text-white animate-fade-in">
       
@@ -33,26 +36,26 @@ const Home = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center relative z-10">
           <div className="inline-block mb-4 px-4 py-1 rounded-full bg-blue-900/30 border border-blue-500/30 text-blue-300 text-sm font-semibold animate-bounce-slow">
-            AI-Powered Idea Generator
+            {t('home.badge')}
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
-            Build Your Idea <br />
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
+            {t('home.heroTitle1')} <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-              With Data, Not Luck.
+              {t('home.heroTitle2')}
             </span>
           </h1>
           
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
-            Idea Generator uses advanced AI to validate your ideas, find the perfect co-founders, and analyze market trends in seconds.
+          <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+            {t('home.heroDesc')}
           </p>
 
-          <div className="flex justify-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/analyze" className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-lg shadow-blue-600/30 hover:scale-105">
-              Start Analysis
+              {t('home.startAnalysis')}
             </Link>
             <Link to="/generate" className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 rounded-full font-bold text-lg border border-gray-700 transition-all hover:scale-105">
-              Get Ideas
+              {t('home.getIdeas')}
             </Link>
           </div>
         </div>
@@ -60,59 +63,66 @@ const Home = () => {
 
       {/* --- FEATURES SECTION --- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <h2 className="text-3xl font-bold text-center mb-12">Everything You Need to Launch 🚀</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">{t('home.sectionTitle')}</h2>
         
-        {/* Changed from GRID to FLEX to center the last row */}
         <div className="flex flex-wrap justify-center gap-6">
           
-          {/* 1. Feasibility Analyzer */}
           <FeatureCard 
-            title="Idea Validator" 
-            desc="Check if your startup idea is viable. Get SWOT analysis and AI feedback instantly."
+            title={t('home.ideaValidator')}
+            desc={t('home.ideaValidatorDesc')}
             icon="🧠" 
             link="/analyze"
             color="blue"
-            className="w-full md:w-[45%] lg:w-[30%]" 
+            className="w-full sm:w-[45%] lg:w-[30%]" 
           />
 
-          {/* 2. Idea Generator */}
           <FeatureCard 
-            title="Idea Generator" 
-            desc="Stuck? Let AI brainstorm unique startup concepts based on your interests."
+            title={t('home.ideaGenerator')}
+            desc={t('home.ideaGeneratorDesc')}
             icon="💡" 
             link="/generate"
             color="orange"
-            className="w-full md:w-[45%] lg:w-[30%]"
+            className="w-full sm:w-[45%] lg:w-[30%]"
           />
 
-          {/* 3. Valuation Tool 
-          <FeatureCard 
-            title="Valuation Tool" 
-            desc="Estimate your startup's pre-money valuation using industry data and ML models."
-            icon="💰" 
-            link="/valuation"
-            color="emerald"
-            className="w-full md:w-[45%] lg:w-[30%]"
-          /> */}
 
-          {/* 4. Talent Scout */}
+
           <FeatureCard 
-            title="Talent Scout" 
-            desc="Find real developers from GitHub (India) and check team compatibility with AI."
+            title={t('home.talentScout')}
+            desc={t('home.talentScoutDesc')}
             icon="🐙" 
             link="/talent"
             color="green"
-            className="w-full md:w-[45%] lg:w-[30%]"
+            className="w-full sm:w-[45%] lg:w-[30%]"
           />
 
-          {/* 5. Market Heatmap */}
           <FeatureCard 
-            title="Market Trends" 
-            desc="Visualize growth charts, competitor analysis, and sentiment for any industry."
+            title={t('home.marketTrends')}
+            desc={t('home.marketTrendsDesc')}
             icon="📈" 
             link="/market"
             color="purple"
-            className="w-full md:w-[45%] lg:w-[30%]"
+            className="w-full sm:w-[45%] lg:w-[30%]"
+          />
+
+          {/* NEW: Competitor Analysis */}
+          <FeatureCard 
+            title={t('home.competitorAnalysis')}
+            desc={t('home.competitorAnalysisDesc')}
+            icon="⚔️" 
+            link="/competitors"
+            color="red"
+            className="w-full sm:w-[45%] lg:w-[30%]"
+          />
+
+          {/* NEW: Business Canvas */}
+          <FeatureCard 
+            title={t('home.businessCanvas')}
+            desc={t('home.businessCanvasDesc')}
+            icon="📋" 
+            link="/canvas"
+            color="cyan"
+            className="w-full sm:w-[45%] lg:w-[30%]"
           />
 
         </div>
@@ -120,11 +130,11 @@ const Home = () => {
 
       {/* --- FOOTER --- */}
       <footer className="border-t border-gray-800 py-8 text-center text-gray-500 text-sm">
-        <p>© 2025 Idea Generator. Built for Major Project.</p>
+        <p>{t('home.footer')}</p>
       </footer>
 
     </div>
   );
 };
 
-export default Home;    
+export default Home;

@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, ArrowRight } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
 const Login = () => {
     const [formData, setFormData] = useState({
         email: '',
@@ -24,7 +26,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+            const response = await fetch(`${API_BASE}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -36,7 +38,7 @@ const Login = () => {
 
             if (response.ok) {
                 login(data.user, data.token);
-                navigate('/analyze'); // Redirect to dashboard or analyzer upon login
+                navigate('/analyze');
             } else {
                 setError(data.error || 'Failed to login');
             }
@@ -130,12 +132,6 @@ const Login = () => {
                             <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-400">
                                 Remember me
                             </label>
-                        </div>
-
-                        <div className="text-sm">
-                            <a href="#" className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
-                                Forgot your password?
-                            </a>
                         </div>
                     </div>
 

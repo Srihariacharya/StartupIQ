@@ -1,53 +1,81 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Import Pages and Context
-import Navbar from './components/Navbar';
-import Home from './pages/Home';
+// Context Providers
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
+import { LanguageProvider } from './context/LanguageContext';
+
+// Layout
+import Navbar from './components/Navbar';
+
+// Pages - Existing
+import Home from './pages/Home';
 import IdeaAnalyzer from './pages/IdeaAnalyzer';
 import IdeaGenerator from './pages/IdeaGenerator';
 import TalentMatchmaker from './pages/TalentMatchmaker';
 import MarketHeatmap from './pages/MarketHeatmap';
-import ValuationTool from './pages/ValuationTool';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 
+// Pages - New Features
+import CompetitorAnalysis from './pages/CompetitorAnalysis';
+import BusinessCanvas from './pages/BusinessCanvas';
+import SharedReport from './pages/SharedReport';
+
+// Components
+import OnboardingTour from './components/OnboardingTour';
+
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="bg-gray-900 min-h-screen">
-          {/* The Navbar stays visible on all pages */}
-          <Navbar />
+    <ThemeProvider>
+      <LanguageProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <Router>
+              <div className="bg-gray-900 min-h-screen">
+                {/* The Navbar stays visible on all pages */}
+                <Navbar />
 
-          <Routes>
-            {/* Main Landing Page */}
-            <Route path="/" element={<Home />} />
+                {/* Onboarding Tour for first-time visitors */}
+                <OnboardingTour />
 
-            {/* Phase 2: Feasibility Analyzer */}
-            <Route path="/analyze" element={<IdeaAnalyzer />} />
+                <Routes>
+                  {/* Main Landing Page */}
+                  <Route path="/" element={<Home />} />
 
-            {/* Phase 3: AI Idea Generator */}
-            <Route path="/generate" element={<IdeaGenerator />} />
+                  {/* Feasibility Analyzer */}
+                  <Route path="/analyze" element={<IdeaAnalyzer />} />
 
-            {/* Phase 3 (Updated): GitHub Talent Scout */}
-            <Route path="/talent" element={<TalentMatchmaker />} />
+                  {/* AI Idea Generator */}
+                  <Route path="/generate" element={<IdeaGenerator />} />
 
-            {/* Phase 4: Market Trends & Heatmap */}
-            <Route path="/market" element={<MarketHeatmap />} />
+                  {/* GitHub Talent Scout */}
+                  <Route path="/talent" element={<TalentMatchmaker />} />
 
-            {/* Phase 5. Valution result */}
-            <Route path="/valuation" element={<ValuationTool />} />
+                  {/* Market Trends & Heatmap */}
+                  <Route path="/market" element={<MarketHeatmap />} />
 
-            {/* Auth Pages */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+                  {/* Auth Pages */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
 
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+                  {/* New: Competitor Analysis */}
+                  <Route path="/competitors" element={<CompetitorAnalysis />} />
+
+                  {/* New: Business Model Canvas */}
+                  <Route path="/canvas" element={<BusinessCanvas />} />
+
+                  {/* New: Shared Report (Public) */}
+                  <Route path="/shared/:shareId" element={<SharedReport />} />
+                </Routes>
+              </div>
+            </Router>
+          </AuthProvider>
+        </ToastProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

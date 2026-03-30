@@ -13,6 +13,12 @@ class StartupAnalysis(db.Model):
     # This JSON column stores the entire AI output (score, recommendations, etc.)
     ai_result = db.Column(db.JSON, nullable=True)
     
+    # Link analysis to a user (nullable for anonymous analyses)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    
+    # Shareable link ID
+    share_id = db.Column(db.String(8), unique=True, nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -21,6 +27,7 @@ class StartupAnalysis(db.Model):
             "name": self.startup_name,
             "funding": self.funding,
             "result": self.ai_result,
+            "share_id": self.share_id,
             "date": self.created_at.isoformat()
         }
 
@@ -32,6 +39,9 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship to analyses
+    analyses = db.relationship('StartupAnalysis', backref='user', lazy=True)
 
     def to_dict(self):
         return {
