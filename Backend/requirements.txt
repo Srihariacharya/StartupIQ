@@ -2,11 +2,6 @@ Flask
 flask-cors
 flask-sqlalchemy
 python-dotenv
-pymongo
-pandas
-scikit-learn
-xgboost
-shap
 requests
 gunicorn
 google-genai
